@@ -1,4 +1,5 @@
 ### Running a DEMO of rpart on a continuous outcome variable
+# Available at: https://github.com/danielemelotti/decision_tree_exploration
 
 ## Installing the necessary packages:
 install.packages("rpart")
@@ -163,8 +164,11 @@ k_fold_rmse <- function(model, dataset, outcome, k=10) {
   c(rmse_is = rmse(residuals(model)), rmse_oos = rmse(pred_errors))
 }
 
-k_fold_rmse(ols, cardata, "Car.Purchase.Amount", k = nrow(cardata))
-k_fold_rmse(prune_tree, cardata, "Car.Purchase.Amount", k = nrow(cardata))
+k_fold_rmse_ols <- k_fold_rmse(ols, cardata, "Car.Purchase.Amount", k = nrow(cardata))
+k_fold_rmse_prune <- k_fold_rmse(prune_tree, cardata, "Car.Purchase.Amount", k = nrow(cardata))
+
+k_fold_rmse_ols
+k_fold_rmse_prune
 
 # We can see that when we use LOOCV the RMSE_oos is greater than RMSE_is for both the OLS and pruned tree.
 
@@ -233,8 +237,19 @@ rmse_boost_prune <- boost_learn(prune_tree, train_set, "Car.Purchase.Amount") |>
 rmse_boost_ols
 rmse_boost_prune
 
-# Final comparison
-rmse_bag_ols
-rmse_boost_ols
-rmse_bag_prune
-rmse_boost_prune
+# Final comparisons
+error_comparison <- matrix(c(rmse_is_ols, rmse_oos_ols, rmse_is_prune, rmse_oos_prune, k_fold_rmse_ols[1], 
+                       k_fold_rmse_ols[2], k_fold_rmse_prune[1], k_fold_rmse_prune[2]), ncol = 4, byrow = FALSE)
+
+colnames(error_comparison) <- c("rmse_ols", "rmse_prune", "k_fold_rmse_ols", "k_fold_rmse_prune")
+rownames(error_comparison) <- c("is", "oos")
+
+error_comparison
+
+bag_boost_comparison <- matrix(c(rmse_bag_ols, rmse_boost_ols, rmse_bag_prune, rmse_boost_prune), 
+                               ncol = 2, byrow = FALSE)
+
+colnames(bag_boost_comparison) <- c("rmse_ols", "rmse_prune")
+rownames(bag_boost_comparison) <- c("bag", "boost")
+
+bag_boost_comparison
