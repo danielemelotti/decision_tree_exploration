@@ -7,7 +7,6 @@ install.packages("rpart.plot")
 install.packages("rattle")
 require(rpart)
 require(rpart.plot)
-require(dplyr)
 require(rattle)
 
 # For the purpose of this exercise, we'll be using a dataset containing car purchasing data.
@@ -28,17 +27,19 @@ table(cardata$Country)
 # the same country, USA.
 
 ## Splitting the data with a 75:25 split (split-sample cross-validation)
-set.seed(20221128)
+set.seed(20221028)
 train_indices <- sample(1:nrow(cardata), size = 0.75 * nrow(cardata))
 
 train_set <- cardata[train_indices, ]
 
 ## Estimating an ols model on the train dataset
-ols <- lm(Car.Purchase.Amount ~ factor(Gender) + Age + Annual.Salary + Credit.Card.Debt + 
-            Net.Worth, data = train_set)
+model <- Car.Purchase.Amount ~ factor(Gender) + Age + Annual.Salary + 
+                               Credit.Card.Debt + Net.Worth
+ols <- lm(model, data = train_set)
+summary(ols)
 
 ## Building and visualizing the tree
-tree <- rpart(ols$model, data = train_set)
+tree <- rpart(model, data = train_set)
 rpart.plot(tree, type = 2)
 
 # COMMENT: The top value is the average Car.Purchase.Amount for the people represented at a 
@@ -67,6 +68,8 @@ printcp(tree)
 
 ## printcp() PARAMETERS CALCULATION
 # - CP: CP_n is obtained by (rel error_n - rel error_(n+1))/(nsplit_(n+1)-nsplit_n) (https://stats.stackexchange.com/questions/117908/rpart-complexity-parameter-confusion).
+#   e.g., for nsplit 10:
+#     (tree_cp[10, "rel error"] - tree_cp[11, "rel error"]) / (tree_cp[11, "nsplit"] - tree_cp[10, "nsplit"])
 # - rel error: 1 - R^2, similar to linear regression (https://stats.stackexchange.com/questions/103018/difference-between-rel-error-and-xerror-in-rpart-regression-trees).
 # - xerror: It is computed using a 10-fold cross-validation.
 # - xstd: 
@@ -118,13 +121,16 @@ plotcp(prune_tree)
 ## Predicting the outcome variable on the test set
 test_set <- cardata[-train_indices, ]
 purchase_predicted_ols <- predict(ols, test_set)
+purchase_predicted_tree <- predict(tree, test_set)
 purchase_predicted_prune <- predict(prune_tree, test_set)
 
 ## Reporting prediction accuracy using the RMSE
 # In-sample trained model RMSE, comparison of ols vs Pruned Tree:
 rmse_is_ols <- round(sqrt(mean(residuals(ols)^2)), 4)
+rmse_is_tree <- round(sqrt(mean(residuals(tree)^2)), 4)
 rmse_is_prune <- round(sqrt(mean(residuals(prune_tree)^2)), 4)
 rmse_is_ols
+rmse_is_tree
 rmse_is_prune
 
 # Creating a function to calculate the RMSE out of sample
@@ -134,8 +140,10 @@ rmse_oos <- function(actuals, preds) {
 
 # Out-of-sample test data RMSE:
 rmse_oos_ols <- rmse_oos(purchase_predicted_ols, test_set$Car.Purchase.Amount)
+rmse_oos_tree <- rmse_oos(purchase_predicted_tree, test_set$Car.Purchase.Amount)
 rmse_oos_prune <- rmse_oos(purchase_predicted_prune, test_set$Car.Purchase.Amount)
 rmse_oos_ols
+rmse_oos_tree
 rmse_oos_prune
 
 # For the pruned tree, the RMSE_oos is greater than RMSE_is, as it should be. For the ols, that's not the case.
