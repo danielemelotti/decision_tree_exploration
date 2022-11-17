@@ -331,10 +331,37 @@ rownames(bag_boost_comparison) <- c("bag", "boost")
 bag_boost_comparison
 
 ## Implementing a random forest algorithm
+# It is done to overcome the issues of bagging. In fact, the trees from bagging are not completely 
+# independent of each other since all the original predictors are considered at every split of every tree.
+# This leads to highly correlated, which will have almost always the same structure. especially in the 
+# top nodes.
+
+# Random forest solves this issue in 2 ways potentially:
+# 1. Bootstrapping: similar to bagging, each tree is grown to a bootstrap resampled data set,
+# which makes them different and somewhat decorrelates them.
+# 2. Split-variable randomization: each time a split is to be performed, the search for the 
+# split variable is limited to a random subset of m of the p variables. For regression trees, 
+# typical default values are m = p/3 but this should be considered a tuning parameter.
+# When m = p, the randomization amounts to using only step 1 and is the same as bagging.
+# See https://uc-r.github.io/random_forests for reference.
+
+
+
 # Building the model on the train set
 rf_model <- randomForest(model_formula, data = train_set, importance = TRUE)
+
+# calculating the RMSE_is
+sqrt(mean(rf_model$mse))
+
+# We can see how the MSE decreases as more and more trees are developed
+plot(rf_model)
+
+# From this large number of trees, we can find the one with lowest MSE
+which.min(rf_model$mse)
+sqrt(rf_model$mse[which.min(rf_model$mse)])
 
 # Validating the model
 test_pred <- predict(rf_model_2, newdata = test_set, type = "class")
 
-# Calculating the RMSE
+# Calculating the RMSE_oos
+rmse_oos(test_set$SALE_PRC, preds = test_pred)
