@@ -10,13 +10,13 @@ require(rpart.plot)
 require(rattle)
 require(dplyr)
 
-# For the purpose of this exercise, we'll be using a dataset containing car purchasing data.
-# The dataset can be downloaded from: https://www.kaggle.com/datasets/yashk07/car-purchase-price-beginner-dataset
+# For the purpose of this exercise, we'll be using a dataset containing car auction data..
+# The dataset can be downloaded from: https://www.kaggle.com/datasets/tunguz/used-car-auction-prices
 # The 9 variables included in the dataset are Customer Name, Customer e-mail, Country, Gender,
 # Age, Annual Salary, Credit Card Debt, Net Worth, and Car Purchase Amount.
 
 ## Loading specific data and model_formula (remember to set wd)
-fulldata <- read.csv("Car_Purchasing_Data.csv")
+fulldata <- read.csv("car_auction_prices.csv")
 str(fulldata)
 dv <- "Car.Purchase.Amount" # outcome variable
 model_formula <- Car.Purchase.Amount ~ factor(Gender) + Age + Annual.Salary + 
