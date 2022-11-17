@@ -10,31 +10,41 @@ require(rpart.plot)
 require(rattle)
 require(dplyr)
 
-# For the purpose of this exercise, we'll be using a dataset containing car auction data..
-# The dataset can be downloaded from: https://www.kaggle.com/datasets/tunguz/used-car-auction-prices
-# The 9 variables included in the dataset are Customer Name, Customer e-mail, Country, Gender,
-# Age, Annual Salary, Credit Card Debt, Net Worth, and Car Purchase Amount.
+# For the purpose of this exercise, we'll be using a dataset containing cars data from 2019.
+# The dataset can be downloaded from: https://www.kaggle.com/datasets/lepchenkov/usedcarscatalog
+# The dataset includes a total of 30 variables, but we will focus only on 7 of them.
 
-## Loading specific data and model_formula (remember to set wd)
-fulldata <- read.csv("car_auction_prices.csv")
+## Loading specific data and model_formula
+DL_data <- read.csv("cars.csv")
+str(DL_data)
+
+# Filtering for the variables of interest, creating a new variable indicating the cars age
+fulldata <- DL_data %>%
+  select("odometer_value", "year_produced", "engine_capacity", "has_warranty",
+         "price_usd", "up_counter", "duration_listed") %>%
+  mutate(car_years = 2019 - year_produced) %>%
+  select(-"year_produced")
+
 str(fulldata)
-dv <- "Car.Purchase.Amount" # outcome variable
-model_formula <- Car.Purchase.Amount ~ factor(Gender) + Age + Annual.Salary + 
-         Credit.Card.Debt + Net.Worth
+
+dv <- "price_usd" # outcome variable
+model_formula <- price_usd ~ odometer_value + engine_capacity + factor(has_warranty) +
+  up_counter + duration_listed + car_years
+
+head(fulldata)
 
 table(is.na(fulldata))
 
-# There is no missing value. Moreover, variables like Customer Name and Customer email
-# will not be considered as they are not determining for the outcome of our analysis.
-# Lastly, the Country variable will not be considered either, because all of the customers are from
-# the same country, USA.
+# There are some missing values. Let's omit them.
+fulldata <- na.omit(fulldata)
 
-plot(fulldata[, c(dv, "Gender", "Age", "Annual.Salary", "Credit.Card.Debt", "Net.Worth")], 
+plot(fulldata[, c(dv, "odometer_value", "engine_capacity", "has_warranty",
+                      "up_counter", "duration_listed", "car_years")], 
      col=rgb(0.7, 0.7, 0.7, 0.3)) # inspecting the relationships between the data
 
 ## Split-sample cross validation 
 # Performing a 75:25 split
-set.seed(20221028)
+set.seed(2012)
 train_indices <- sample(1:nrow(fulldata), size = 0.75 * nrow(fulldata))
 
 # Creating the train and test sets
@@ -49,12 +59,12 @@ summary(ols)
 tree <- rpart(model_formula, data = train_set)
 rpart.plot(tree, type = 2)
 
-# DESCRIPTION: The top value is the average Car.Purchase.Amount for the people represented at a 
+# DESCRIPTION: The top value is the average car price for the cars included within a 
 # certain node. For example, the root node shows that in the whole train data, the average
-# cost for a new car is 45,000; the root's left child node instead presents an average cost
-# of 38,000 (for people who have an annual salary lower than 58,000). The lower value represents the
-# percentage of the whole data which is included at that node (and therefore satisfies the decision
-# criteria at every split up to that point).
+# cost for a used car is 6,640; the root's left child node instead presents an average cost
+# of 3,451 (for cars that are older than 13 years). The values won't hold if the seed is changed.
+# The lower value represents the percentage of the whole data which is included at that node 
+# (and therefore satisfies the decision criteria at every split up to that point).
 
 # COMMENT: In classification trees there is one more value in each node, just between the two
 # just described values, which is the probability. See https://www.guru99.com/r-decision-trees.html 
@@ -182,7 +192,7 @@ sample_boot <- function(dataset, model_formula, yvar) {
                                  rmse_is_prune, rmse_oos_prune)
 }
 
-set.seed(20221028)
+set.seed(2012)
 boot_rmse <- replicate(100, sample_boot(fulldata, model_formula, dv))
  
 boot_rmse_is_ols <- mean(boot_rmse[1, ])
@@ -224,9 +234,9 @@ k_fold_rmse <- function(estimated_model, dataset, outcome, k=10) {
   c(rmse_is = rmse(residuals(estimated_model)), rmse_oos = rmse(pred_errors))
 }
 
-k_fold_rmse_ols <- k_fold_rmse(ols, fulldata, dv, k = nrow(fulldata))
-k_fold_rmse_tree <- k_fold_rmse(tree, fulldata, dv, k = nrow(fulldata))
-k_fold_rmse_prune <- k_fold_rmse(prune_tree, fulldata, dv, k = nrow(fulldata))
+k_fold_rmse_ols <- k_fold_rmse(ols, fulldata, dv, k = 50)
+k_fold_rmse_tree <- k_fold_rmse(tree, fulldata, dv, k = 50)
+k_fold_rmse_prune <- k_fold_rmse(prune_tree, fulldata, dv, k = 50)
 
 k_fold_rmse_ols
 k_fold_rmse_tree
