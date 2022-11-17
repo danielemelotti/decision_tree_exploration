@@ -131,10 +131,16 @@ purchase_predicted_tree <- predict(tree, test_set)
 purchase_predicted_prune <- predict(prune_tree, test_set)
 
 ## Reporting prediction accuracy using Root Mean Squared Error (RMSE)
+
+# Creating a function to calculate the RMSE out of sample
+rmse_is <- function(estimated_model) {
+  sqrt(mean(residuals(estimated_model)^2))
+}
+  
 # In-sample trained model_formula RMSE, comparison of ols vs Pruned Tree:
-rmse_is_ols <- round(sqrt(mean(residuals(ols)^2)), 4)
-rmse_is_tree <- round(sqrt(mean(residuals(tree)^2)), 4)
-rmse_is_prune <- round(sqrt(mean(residuals(prune_tree)^2)), 4)
+rmse_is_ols <- round(rmse_is(ols), 4)
+rmse_is_tree <- round(rmse_is(tree), 4)
+rmse_is_prune <- round(rmse_is(prune_tree), 4)
 
 rmse_is_ols
 rmse_is_tree
