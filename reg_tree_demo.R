@@ -356,6 +356,8 @@ sqrt(mean(rf_model$mse))
 # We can see how the MSE decreases as more and more trees are developed
 plot(rf_model)
 
+# It looks like about 150 trees are enough to achieve a stable error rate
+
 # From this large number of trees, we can find the one with lowest MSE
 which.min(rf_model$mse)
 sqrt(rf_model$mse[which.min(rf_model$mse)])
@@ -374,7 +376,7 @@ rmse_oos(test_set$SALE_PRC, preds = test_pred)
 # - nodesize: minimum number of samples within the terminal nodes. This parameters controls the complexity of the tree;
 # - maxnodes: maximum number of terminal nodes. This parameter controls the complexity of the tree.
 
-# Tuning with randomForest
+## Tuning with randomForest
 # Fetching the names of features
 features <- setdiff(names(train_set), "SALE_PRC")
 
@@ -382,9 +384,42 @@ set.seed(2012)
 tuned_model <- tuneRF(
   x = train_set[features],
   y = train_set$Sale_Price,
-  ntreeTry = 25,
+  ntreeTry = 150,
   mtryStart = 2, # 6 features
   stepFactor = 1, # we increment by 3 features until improvement stops...
   improve = 0.01, #... improving by 1%
   trace = FALSE # do not show real-time progress
 )
+
+## Tuning with ranger
+# Hyperparameter grid search
+hyper_grid <- expand.grid(
+  mtry       = seq(5, 10, by = 2),
+  node_size  = seq(3, 9, by = 2),
+  sample_size = c(.55, .632, .70, .80),
+  OOB_RMSE   = 0
+)
+
+# Total number of combinations
+nrow(hyper_grid)
+
+for(i in 1:nrow(hyper_grid)) {
+  
+  # train model
+  model <- ranger(
+    formula         = SALE_PRC ~ ., 
+    data            = train_set, 
+    num.trees       = 150,
+    mtry            = hyper_grid$mtry[i],
+    min.node.size   = hyper_grid$node_size[i],
+    sample.fraction = hyper_grid$sample_size[i],
+    seed            = 123
+  )
+  
+  # add OOB error to grid
+  hyper_grid$OOB_RMSE[i] <- sqrt(model$prediction.error)
+}
+
+hyper_grid %>% 
+  dplyr::arrange(OOB_RMSE) %>%
+  head(10)
