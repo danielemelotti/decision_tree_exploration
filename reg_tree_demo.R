@@ -335,15 +335,15 @@ bag_boost_comparison
 ## Implementing a random forest algorithm
 # It is done to overcome the issues of bagging. In fact, the trees from bagging are not completely 
 # independent of each other since all the original predictors are considered at every split of every tree.
-# This leads to highly correlated, which will have almost always the same structure. especially in the 
-# top nodes.
+# For each tree, few strong predictors will be selected repeatedly, which will lead to very similar trees
+# (especially in the top nodes), and to highly correlated predictions, which will have almost always the same structure.
 
 # Random forest solves this issue in 2 ways potentially:
 # 1. Bootstrapping: similar to bagging, each tree is grown to a bootstrap resampled data set,
 # which makes them different and somewhat decorrelates them.
 # 2. Split-variable randomization: each time a split is to be performed, the search for the 
 # split variable is limited to a random subset of m of the p variables. For regression trees, 
-# typical default values are m = p/3 but this should be considered a tuning parameter.
+# typical default values are m = p/3, but this should be considered a tuning parameter.
 # When m = p, the randomization amounts to using only step 1 and is the same as bagging.
 # See https://uc-r.github.io/random_forests for reference.
 
@@ -362,7 +362,7 @@ plot(rf_model)
 which.min(rf_model$mse)
 sqrt(rf_model$mse[which.min(rf_model$mse)])
 
-# Validating the model
+# Producing predictions with the random forest model
 test_pred <- predict(rf_model_2, newdata = test_set, type = "class")
 
 # Calculating the RMSE_oos
@@ -407,13 +407,13 @@ for(i in 1:nrow(hyper_grid)) {
   
   # train model
   model <- ranger(
-    formula         = SALE_PRC ~ ., 
-    data            = train_set, 
-    num.trees       = 150,
-    mtry            = hyper_grid$mtry[i],
-    min.node.size   = hyper_grid$node_size[i],
+    formula = SALE_PRC ~ ., 
+    data = train_set, 
+    num.trees = 150,
+    mtry = hyper_grid$mtry[i],
+    min.node.size = hyper_grid$node_size[i],
     sample.fraction = hyper_grid$sample_size[i],
-    seed            = 123
+    seed = 123
   )
   
   # add OOB error to grid
