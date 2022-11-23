@@ -1,4 +1,5 @@
-### Running a DEMO of rpart on a continuous outcome variable
+source("R/data_import.R")
+source("R/functions.R")
 
 ## Implementing a random forest algorithm
 # It is done to overcome the issues of bagging. In fact, the trees from bagging are not completely independent of each other since all the original predictors are considered at every split of every tree. For each tree, few strong predictors will be selected repeatedly, which will lead to very similar trees (especially in the top nodes), and to highly correlated predictions, which will have almost always the same structure.
@@ -23,7 +24,7 @@ which.min(rf_model$mse)
 sqrt(rf_model$mse[which.min(rf_model$mse)])
 
 # Producing predictions with the random forest model
-test_pred <- predict(rf_model_2, newdata = test_set, type = "class")
+test_pred <- predict(rf_model, newdata = test_set, type = "class")
 
 # Calculating the RMSE_oos
 rmse_oos(test_set$SALE_PRC, preds = test_pred)

@@ -1,26 +1,13 @@
+source("R/data_import.R")
+source("R/functions.R")
+
 ### Comparing the predictive accuracy of an OLS model and a Regression Tree by implementing Split-sample Cross Validation, Bootstrap, LOOCV, Bagging and Boosting.
-
-dv <- "SALE_PRC" # outcome variable
-model_formula <- SALE_PRC ~ LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + RAIL_DIST + OCEAN_DIST +
-  WATER_DIST + CNTR_DIST + SUBCNTR_DI + HWY_DIST + age + avno60plus + structure_quality
-
-table(is.na(fulldata))
-
-# There are no missing values
 
 # Plotting the data to inspect relationships
 plot(fulldata[, c(dv, "TOT_LVG_AREA", "RAIL_DIST", "CNTR_DIST", "age", "structure_quality")], 
      col=rgb(0.7, 0.7, 0.7, 0.3)) # inspecting the relationships between the data
 
 ## Split-sample cross validation 
-# Performing a 75:25 split
-set.seed(2012)
-train_indices <- sample(1:nrow(fulldata), size = 0.75 * nrow(fulldata))
-
-# Creating the train and test sets
-train_set <- fulldata[train_indices, ]
-test_set <- fulldata[-train_indices, ]
-
 ## Estimating an ols model_formula on the train dataset
 ols <- lm(model_formula, data = train_set)
 summary(ols)
@@ -81,8 +68,6 @@ plotcp(prune_tree)
 # DESCRIPTION: What is the dotted line in plotcp()? The function plots the cp values against their related xerror, with xstd included.The dotted line represents the highest cross-validated error less than the minimum cross-validated error plus 1 standard deviation of the error at that tree. See https://stackoverflow.com/questions/21698540/whats-the-meaning-of-plotcp-result-in-rpart for reference.
 
 ## Producing predictions
-# Creating a list of models
-models <- list(ols, tree, prune_tree)
 
 # Predicting the outcome variable on the test set for the ols, tree and pruned tree models
 purchase_predicted_ols <- predict(ols, test_set)
@@ -144,7 +129,7 @@ sample_boot <- function(dataset, model_formula, yvar) {
 }
 
 set.seed(2012)
-boot_rmse <- replicate(100, sample_boot(fulldata, model_formula, dv))
+boot_rmse <- replicate(25, sample_boot(fulldata, model_formula, dv))
 
 boot_rmse_is_ols <- mean(boot_rmse[1, ])
 boot_rmse_oos_ols <- mean(boot_rmse[2, ])
@@ -162,29 +147,6 @@ rownames(comparison) <- c("is", "oos")
 comparison
 
 ## Implementing LOOCV
-fold_i_pe <- function(i, k, estimated_model, dataset, outcome) {
-  folds <- cut(1:nrow(dataset), breaks=k, labels=FALSE)
-  test_indices <- which(folds==i)
-  test_set <- dataset[test_indices, ]
-  train_set <- dataset[-test_indices, ]
-  trained_model <- update(estimated_model, data = train_set)
-  predictions <- predict(trained_model, test_set)
-  dataset[test_indices, outcome] - predictions # predictive error
-}
-
-k_fold_rmse <- function(estimated_model, dataset, outcome, k=10) {
-  shuffled_indicies <- sample(1:nrow(dataset))
-  dataset <- dataset[shuffled_indicies,]
-  
-  fold_pred_errors <- sapply(1:k, \(kth) {
-    fold_i_pe(kth, k, estimated_model, dataset, outcome)
-  })
-  
-  pred_errors <- unlist(fold_pred_errors)
-  rmse <- \(errs) sqrt(mean(errs^2))
-  c(rmse_is = rmse(residuals(estimated_model)), rmse_oos = rmse(pred_errors))
-}
-
 k_fold_rmse_ols <- k_fold_rmse(ols, fulldata, dv, k = 50)
 k_fold_rmse_tree <- k_fold_rmse(tree, fulldata, dv, k = 50)
 k_fold_rmse_prune <- k_fold_rmse(prune_tree, fulldata, dv, k = 50)
