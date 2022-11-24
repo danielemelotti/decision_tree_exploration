@@ -151,7 +151,7 @@ rownames(comparison) <- c("is", "oos")
 
 comparison
 
-## Implementing LOOCV
+## Implementing k-fold Cross-Validation
 k_fold_rmse_ols <- k_fold_rmse(ols, fulldata, dv, k = 50)
 k_fold_rmse_tree <- k_fold_rmse(tree, fulldata, dv, k = 50)
 k_fold_rmse_prune <- k_fold_rmse(prune_tree, fulldata, dv, k = 50)
@@ -187,16 +187,14 @@ rmse_boost_ols
 rmse_boost_prune
 
 # Final comparisons
-error_comparison <- matrix(c(rmse_is_ols, rmse_oos_ols, rmse_is_prune, rmse_oos_prune, k_fold_rmse_ols[1], 
-                             k_fold_rmse_ols[2], k_fold_rmse_prune[1], k_fold_rmse_prune[2]), ncol = 4, byrow = FALSE)
+error_comparison <- matrix(c(rmse_is_ols, rmse_oos_ols, rmse_is_prune, rmse_oos_prune, k_fold_rmse_ols[1], k_fold_rmse_ols[2], k_fold_rmse_prune[1], k_fold_rmse_prune[2]), ncol = 4, byrow = FALSE)
 
 colnames(error_comparison) <- c("rmse_ols", "rmse_prune", "k_fold_rmse_ols", "k_fold_rmse_prune")
 rownames(error_comparison) <- c("is", "oos")
 
 error_comparison
 
-bag_boost_comparison <- matrix(c(rmse_bag_ols, rmse_boost_ols, rmse_bag_prune, rmse_boost_prune), 
-                               ncol = 2, byrow = FALSE)
+bag_boost_comparison <- matrix(c(rmse_bag_ols, rmse_boost_ols, rmse_bag_prune, rmse_boost_prune), ncol = 2, byrow = FALSE)
 
 colnames(bag_boost_comparison) <- c("rmse_ols", "rmse_prune")
 rownames(bag_boost_comparison) <- c("bag", "boost")
