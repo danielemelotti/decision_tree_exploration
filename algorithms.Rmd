@@ -1,0 +1,22 @@
+# Algorithms used in this project
+
+(1) Split-Sample Cross Validation
+(2) Leave-One-Out Cross Validation (LOOCV)
+(3) Bootstrapping
+(4) Bagging
+(5) Boosting
+(6) Random Forest
+
+## (1) Split-Sample Cross Validation
+
+## (2) Leave-One-Out Cross Validation (LOOCV)
+
+### k-Fold Cross Validation
+
+## (3) Bootstrapping
+
+## (4) Bagging
+
+## (5) Boosting
+
+## (6) Random Forest

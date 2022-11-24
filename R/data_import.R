@@ -20,7 +20,7 @@ require(insight)
 # The dataset includes a total of 17 variables.
 
 ## Loading specific data and model_formula
-download_data <- read.csv("miami-housing.csv")
+download_data <- read.csv("data/miami-housing.csv")
 str(download_data)
 
 # Filtering for the variables of interest
