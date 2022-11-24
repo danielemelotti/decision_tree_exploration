@@ -4,8 +4,7 @@ source("R/functions.R")
 ### Comparing the predictive accuracy of an OLS model and a Regression Tree by implementing Split-sample Cross Validation, Bootstrap, LOOCV, Bagging and Boosting.
 
 # Plotting the data to inspect relationships
-plot(fulldata[, c(dv, "TOT_LVG_AREA", "RAIL_DIST", "CNTR_DIST", "age", "structure_quality")], 
-     col=rgb(0.7, 0.7, 0.7, 0.3)) # inspecting the relationships between the data
+plot(fulldata[, c(dv, "TOT_LVG_AREA", "RAIL_DIST", "CNTR_DIST", "age", "structure_quality")], col=rgb(0.7, 0.7, 0.7, 0.3)) # inspecting the relationships between the data
 
 ## Split-sample cross validation 
 ## Estimating an ols model_formula on the train dataset

@@ -24,8 +24,11 @@ download_data <- read.csv("data/miami-housing.csv")
 str(download_data)
 
 # Filtering for the variables of interest
-fulldata <- download_data %>%
+fulldata_ordered <- download_data %>%
   select(-"PARCELNO")
+
+# Shuffling the data to increase randomness
+fulldata <- fulldata_ordered[sample(1:nrow(fulldata_ordered)), ]
 
 str(fulldata)
 
