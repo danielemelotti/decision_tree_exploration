@@ -4,9 +4,21 @@ source("R/functions.R")
 ## Implementing a random forest algorithm
 # It is done to overcome the issues of bagging. In fact, the trees from bagging are not completely independent of each other since all the original predictors are considered at every split of every tree. For each tree, few strong predictors will be selected repeatedly, which will lead to very similar trees (especially in the top nodes), and to highly correlated predictions, which will have almost always the same structure.
 
-# Random forest solves this issue in 2 ways potentially:
+# Random forest solves this issue in a 2-steps way::
 # 1. Bootstrapping: similar to bagging, each tree is grown to a bootstrap resampled data set, which makes them different and somewhat decorrelates them.
 # 2. Split-variable randomization: each time a split is to be performed, the search for the  split variable is limited to a random subset of m of the p variables. For regression trees,  typical default values are m = p/3, but this should be considered a tuning parameter. When m = p, the randomization amounts to using only step 1 and is the same as bagging. See https://uc-r.github.io/random_forests for reference.
+
+# Advantages:
+# - Typically have very good performance
+# - Remarkably good “out-of-the box” - very little tuning required
+# - Built-in validation set - don’t need to sacrifice data for extra validation
+# - No pre-processing required
+# - Robust to outliers
+
+# Disadvantages:
+# - Can become slow on large data sets
+# - Although accurate, often cannot compete with advanced boosting algorithms
+# - Less interpretable
 
 # Building the model on the train set
 rf_model <- randomForest(model_formula, data = train_set, importance = TRUE)
