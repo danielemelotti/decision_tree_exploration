@@ -96,3 +96,11 @@ for(i in 1:nrow(hyper_grid)) {
 hyper_grid %>% 
   dplyr::arrange(OOB_RMSE) %>%
   head(10)
+
+rmse_bag_ols <- bagged_learn(estimated_model = ols, dataset = train_set) |>
+  bagged_predict(new_data = test_set) |> 
+  rmse_oos(actuals = test_set[, dv])
+
+vars_list <- xv_list$conditional
+
+double_bagged_trees <- bagged_learn_forest(estimated_model = ols , dataset = train_set, b = 5, p =  xv_list$conditional, outcome = dv)
