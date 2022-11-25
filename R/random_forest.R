@@ -103,4 +103,4 @@ rmse_bag_ols <- bagged_learn(estimated_model = ols, dataset = train_set) |>
 
 vars_list <- xv_list$conditional
 
-double_bagged_trees <- bagged_learn_forest(estimated_model = ols , dataset = train_set, b = 5, p =  xv_list$conditional, outcome = dv)
+double_bagged_trees <- double_bagged_learn(estimated_model = ols , dataset = train_set, b = 5, p =  xv_list$conditional, outcome = dv)
