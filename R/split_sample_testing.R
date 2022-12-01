@@ -141,8 +141,15 @@ k_fold_rmse_ols # still oos < is ...
 k_fold_rmse_tree
 k_fold_rmse_prune
 
-## Implementing Bagging
+# Comparing is and oos errors from split-sample and k-fold
+error_comparison <- matrix(c(rmse_is_ols, rmse_oos_ols, rmse_is_prune, rmse_oos_prune, k_fold_rmse_ols[1], k_fold_rmse_ols[2], k_fold_rmse_prune[1], k_fold_rmse_prune[2]), ncol = 4, byrow = FALSE)
 
+colnames(error_comparison) <- c("rmse_ols", "rmse_prune", "k_fold_rmse_ols", "k_fold_rmse_prune")
+rownames(error_comparison) <- c("is", "oos")
+
+error_comparison
+
+## Implementing Bagging
 # Computing the RMSEs between ols and prune_tree bagged models
 rmse_bag_ols <- bagged_learn(estimated_model = ols, dataset = train_set) |>
   bagged_predict(new_data = test_set) |> 
@@ -156,7 +163,6 @@ rmse_bag_ols
 rmse_bag_prune
 
 ## Implementing Boosting
-
 # Comparing the RMSEs between ols and prune_tree boosted models
 rmse_boost_ols <- boost_learn(ols, train_set, dv) |>
   boost_predict(test_set) |> rmse_oos(actuals = test_set[, dv])
@@ -167,25 +173,21 @@ rmse_boost_prune <- boost_learn(prune_tree, train_set, dv) |>
 rmse_boost_ols
 rmse_boost_prune
 
-# Comparing the errors from bagging and boosting of ols and pruned tree
-error_comparison <- matrix(c(rmse_is_ols, rmse_oos_ols, rmse_is_prune, rmse_oos_prune, k_fold_rmse_ols[1], k_fold_rmse_ols[2], k_fold_rmse_prune[1], k_fold_rmse_prune[2]), ncol = 4, byrow = FALSE)
-
-colnames(error_comparison) <- c("rmse_ols", "rmse_prune", "k_fold_rmse_ols", "k_fold_rmse_prune")
-rownames(error_comparison) <- c("is", "oos")
-
-error_comparison
-
-bag_boost_comparison <- matrix(c(rmse_bag_ols, rmse_boost_ols, rmse_bag_prune, rmse_boost_prune), ncol = 2, byrow = FALSE)
-
-colnames(bag_boost_comparison) <- c("rmse_ols", "rmse_prune")
-rownames(bag_boost_comparison) <- c("bag", "boost")
-
-bag_boost_comparison
-
 # Double Bagging
-rmse_bag_ols <- bagged_learn(estimated_model = ols, dataset = train_set) |>
-  bagged_predict(new_data = test_set) |> 
+set.seed(2012)
+
+rms_db_ols <- double_bagged_learn(estimated_model = ols , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv) |>
+  bagged_predict(new_data = test_set) |>
   rmse_oos(actuals = test_set[, dv])
 
-double_bagged_trees <- double_bagged_learn(estimated_model = ols , dataset = train_set, b = 5, p =  xv_list$conditional, outcome = dv)
+rms_dbt <- double_bagged_learn(estimated_model = tree , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv) |>
+  bagged_predict(new_data = test_set) |>
+  rmse_oos(actuals = test_set[, dv])
 
+# Comparing the errors from bagging, boosting and double-bagging of ols and pruned tree
+bag_boost_comparison <- matrix(c(rmse_bag_ols, rmse_bag_prune, rmse_boost_ols, rmse_boost_prune, rms_db_ols, rms_dbt), ncol = 2, byrow = TRUE)
+
+colnames(bag_boost_comparison) <- c("rmse_ols", "rmse_prune")
+rownames(bag_boost_comparison) <- c("bag", "boost", "double_bag")
+
+bag_boost_comparison
