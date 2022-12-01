@@ -1,3 +1,6 @@
+---
+output: github_document
+---
 # Algorithms used in this project
 
 (1) Split-Sample Cross-Validation
