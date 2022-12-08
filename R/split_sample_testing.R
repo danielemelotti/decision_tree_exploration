@@ -54,7 +54,7 @@ rmse_oos_prune
 ## Bootstrapping the split-sample CV RMSEs to see if results are consistent
 sample_boot <- function(dataset, model_formula, yvar) {
   # Splitting the dataset in train and test sets
-  train_indices <- sample(1:nrow(fulldata), size = 0.75 * nrow(fulldata))
+  train_indices <- sample(seq_len(nrow(fulldata)), size = 0.75 * nrow(fulldata))
   train_set <- fulldata[train_indices, ]
   test_set <- fulldata[-train_indices, ]
 
