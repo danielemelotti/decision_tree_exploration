@@ -196,3 +196,13 @@ rownames(error_comparison) <- c("split-sample_ols", "split-sample_tree", "k-fold
                                     "double-bagging_ols", "double-bagging_tree")
 
 error_comparison
+
+## Implementing k_fold with caret package
+# Defining training control as cross-validation with k = 10
+set.seed(2012)
+train_control <- trainControl(method = "cv", p = 0.75, number = 10)
+
+# Training the model
+caret_ols <- train(model_formula, data = fulldata, method = "lm", trControl = train_control)
+
+caret_ols$results$RMSE

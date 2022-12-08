@@ -10,6 +10,7 @@
 #install.packages("ranger")
 #install.packages("insight")
 #install.packages("formula.tools")
+#install.packages("caret")
 require(rpart)
 require(rpart.plot)
 require(dplyr)
@@ -17,6 +18,7 @@ require(randomForest)
 require(ranger)
 require(insight)
 require(formula.tools)
+require(caret)
 
 # For the purpose of this exercise, we'll be using a dataset regarding housing prices in Miami.
 # The dataset includes a total of 17 variables.
