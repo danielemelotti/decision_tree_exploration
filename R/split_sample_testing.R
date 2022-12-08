@@ -200,9 +200,11 @@ error_comparison
 ## Implementing k_fold with caret package
 # Defining training control as cross-validation with k = 10
 set.seed(2012)
-train_control <- trainControl(method = "cv", p = 0.75, number = 10)
+train_control <- trainControl(method = "cv", p = 0.75 , number = 100, savePredictions = TRUE)
 
 # Training the model
-caret_ols <- train(model_formula, data = fulldata, method = "lm", trControl = train_control)
+caret_ols <- train(model_formula, data = fulldata, method = "rpart2", trControl = train_control)
+
+caret_ols$pred
 
 caret_ols$results$RMSE
