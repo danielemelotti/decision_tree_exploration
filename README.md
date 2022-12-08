@@ -18,6 +18,7 @@ techniques, namely:
 - Bootstrapping
 - LOOCV
 - Bagging
+- Double-bagging
 - Boosting
 - Random Forest
 
