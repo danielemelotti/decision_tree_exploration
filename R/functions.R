@@ -19,7 +19,8 @@ fold_i_pe <- function(i, k, estimated_model, dataset, outcome) {
   dataset[test_indices, outcome] - predictions # predictive error
 }
 
-k_fold_rmse <- function(estimated_model, dataset, outcome, k=10) {
+k_fold_rmse <- function(estimated_model, dataset, outcome, k=10, seed) {
+  set.seed(seed)
   shuffled_indicies <- sample(seq_len(nrow(dataset)))
   shuffled_dataset <- dataset[shuffled_indicies,]
 
@@ -33,7 +34,8 @@ k_fold_rmse <- function(estimated_model, dataset, outcome, k=10) {
 }
 
 # Bagging
-bagged_learn <- function(estimated_model, dataset, b=100) {
+bagged_learn <- function(estimated_model, dataset, b=100, seed) {
+  set.seed(seed)
   lapply(1:b, \(i) {
     data_i <- dataset[sample(nrow(dataset), replace = TRUE),]
     update(estimated_model, data=data_i)
@@ -76,7 +78,8 @@ boost_predict <- function(boosted_learning, new_data) {
 # Double Bagging
 #  - p: vector of predictors
 #  - m: number of predictors randomly chosen in each iteration
-double_bagged_learn <- function(estimated_model, dataset, b=100, p, m, outcome) {
+double_bagged_learn <- function(estimated_model, dataset, b=100, p, m, outcome, seed) {
+  set.seed(seed)
   m <- length(p)/3 # default m
   lapply(1:b, \(i) { # from bootstrap 1 to b
     data_i <- dataset[sample(nrow(dataset), replace = TRUE),] # shuffle rows with replacement

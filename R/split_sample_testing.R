@@ -3,10 +3,17 @@ source("R/functions.R")
 
 ### Comparing the predictive accuracy of an OLS model and a Regression Tree by implementing Split-sample Cross Validation, Bootstrap, LOOCV, Bagging and Boosting.
 
+# Performing a 75:25 split
+set.seed(2012)
+train_indices <- sample(seq_len(nrow(fulldata)), size = 0.75 * nrow(fulldata))
+
+# Creating the train and test sets
+train_set <- fulldata[train_indices, ]
+test_set <- fulldata[-train_indices, ]
+
 ## Split-sample cross validation
 ## Estimating an ols model_formula on the train dataset
 ols <- lm(model_formula, data = train_set)
-summary(ols)
 
 ## Building the tree
 tree <- rpart(model_formula, data = train_set)
@@ -26,30 +33,25 @@ tree_fun <- rpart(model_formula, data = train_set, control = rpart.control(cp = 
 
 ## Producing predictions
 
-# Predicting the outcome variable on the test set for the ols, tree and pruned tree models
+# Predicting the outcome variable on the test set for the ols and tree models
 purchase_predicted_ols <- predict(ols, test_set)
 purchase_predicted_tree <- predict(tree, test_set)
-purchase_predicted_prune <- predict(prune_tree, test_set)
 
 ## Reporting prediction accuracy using Root Mean Squared Error (RMSE)
 
-# In-sample trained model_formula RMSE, comparison of ols vs Pruned Tree:
+# In-sample trained model_formula RMSE, comparison of ols vs tree:
 rmse_is_ols <- round(rmse_is(ols), 4)
 rmse_is_tree <- round(rmse_is(tree), 4)
-rmse_is_prune <- round(rmse_is(prune_tree), 4)
 
 rmse_is_ols
 rmse_is_tree
-rmse_is_prune
 
 # Out-of-sample test data RMSE:
 rmse_oos_ols <- rmse_oos(purchase_predicted_ols, test_set[, dv])
 rmse_oos_tree <- rmse_oos(purchase_predicted_tree, test_set[, dv])
-rmse_oos_prune <- rmse_oos(purchase_predicted_prune, test_set[, dv])
 
 rmse_oos_ols
 rmse_oos_tree
-rmse_oos_prune
 
 ## Bootstrapping the split-sample CV RMSEs to see if results are consistent
 sample_boot <- function(dataset, model_formula, yvar) {
@@ -68,21 +70,17 @@ sample_boot <- function(dataset, model_formula, yvar) {
   # Making predictions
   purchase_predicted_ols <- predict(ols, test_set)
   purchase_predicted_tree <- predict(tree, test_set)
-  purchase_predicted_prune <- predict(prune_tree, test_set)
 
   # Calculating in-sample errors
   rmse_is_ols <- round(sqrt(mean(residuals(ols)^2)), 4)
   rmse_is_tree <- round(sqrt(mean(residuals(tree)^2)), 4)
-  rmse_is_prune <- round(sqrt(mean(residuals(prune_tree)^2)), 4)
 
   # Calculating out-of-sample errors
   rmse_oos_ols <- rmse_oos(purchase_predicted_ols, test_set[, yvar])
   rmse_oos_tree <- rmse_oos(purchase_predicted_tree, test_set[, yvar])
-  rmse_oos_prune <- rmse_oos(purchase_predicted_prune, test_set[, yvar])
 
   # Storing the errors in a dataframe
-  error_comparison <- c(rmse_is_ols, rmse_oos_ols, rmse_is_tree, rmse_oos_tree,
-                        rmse_is_prune, rmse_oos_prune)
+  error_comparison <- c(rmse_is_ols, rmse_oos_ols, rmse_is_tree, rmse_oos_tree)
 }
 
 set.seed(2012)
@@ -105,46 +103,67 @@ rownames(comparison) <- c("is", "oos")
 comparison
 
 ## Implementing k-fold Cross-Validation
-set.seed(2012)
-k_fold_rmse_ols <- k_fold_rmse(ols, fulldata, dv, k = 100)
-k_fold_rmse_tree <- k_fold_rmse(tree, fulldata, dv, k = 100)
-k_fold_rmse_prune <- k_fold_rmse(prune_tree, fulldata, dv, k = 100)
+k_fold_rmse_ols <- k_fold_rmse(ols, fulldata, dv, k = 100, seed = 2012)
+k_fold_rmse_tree <- k_fold_rmse(tree, fulldata, dv, k = 100, seed = 2012)
 
 k_fold_rmse_ols # still oos < is ...
-k_fold_rmse_tree
-k_fold_rmse_prune
+k_fold_rmse_tree 
 
 # Comparing is and oos errors from split-sample and k-fold
-error_comparison <- matrix(c(rmse_is_ols, rmse_oos_ols, rmse_is_prune, rmse_oos_prune, k_fold_rmse_ols[1], k_fold_rmse_ols[2], k_fold_rmse_prune[1], k_fold_rmse_prune[2]), ncol = 4, byrow = FALSE)
+error_comparison <- matrix(c(rmse_is_ols, rmse_oos_ols, rmse_is_tree, rmse_oos_tree, k_fold_rmse_ols[1], k_fold_rmse_ols[2], k_fold_rmse_tree[1], k_fold_rmse_tree[2]), ncol = 4, byrow = FALSE)
 
-colnames(error_comparison) <- c("rmse_ols", "rmse_prune", "k_fold_rmse_ols", "k_fold_rmse_prune")
+colnames(error_comparison) <- c("rmse_ols", "rmse_tree", "k_fold_rmse_ols", "k_fold_rmse_ols")
 rownames(error_comparison) <- c("is", "oos")
 
 error_comparison
 
 ## Implementing Bagging
-# Computing the RMSEs between ols and prune_tree bagged models
-rmse_bag_ols <- bagged_learn(estimated_model = ols, dataset = train_set) |>
+# Computing the is and oos RMSEs between ols and tree bagged models
+# is
+bag_is_rmse_ols <- bagged_learn(estimated_model = ols, dataset = train_set, seed = 2012) |>
+  bagged_predict(new_data = train_set) |>
+  rmse_oos(actuals = test_set[, dv])
+
+bag_is_rmse_tree <- bagged_learn(estimated_model = tree, dataset = train_set, seed = 2012) |>
+  bagged_predict(new_data = train_set) |>
+  rmse_oos(actuals = test_set[, dv])
+
+bag_is_rmse_ols
+bag_is_rmse_tree
+
+# oos
+bag_oos_rmse_ols <- bagged_learn(estimated_model = ols, dataset = train_set, seed = 2012) |>
   bagged_predict(new_data = test_set) |>
   rmse_oos(actuals = test_set[, dv])
 
-rmse_bag_prune <- bagged_learn(estimated_model = prune_tree, dataset = train_set) |>
+bag_oos_rmse_tree <- bagged_learn(estimated_model = tree, dataset = train_set, seed = 2012) |>
   bagged_predict(new_data = test_set) |>
   rmse_oos(actuals = test_set[, dv])
 
-rmse_bag_ols
-rmse_bag_prune
+bag_oos_rmse_ols
+bag_oos_rmse_tree
 
 ## Implementing Boosting
-# Comparing the RMSEs between ols and prune_tree boosted models
-rmse_boost_ols <- boost_learn(ols, train_set, dv) |>
+# Comparing the is and oos RMSEs between ols and tree boosted models
+# is
+boost_is_rmse_ols <- boost_learn(ols, train_set, dv) |>
+  boost_predict(test_set) |> rmse_oos(actuals = train_set[, dv])
+
+boost_is_rmse_tree <- boost_learn(tree, train_set, dv) |>
+  boost_predict(test_set) |> rmse_oos(actuals = train_set[, dv])
+
+boost_is_rmse_ols
+boost_is_rmse_tree
+
+# oos
+boost_oos_rmse_ols <- boost_learn(ols, train_set, dv) |>
   boost_predict(test_set) |> rmse_oos(actuals = test_set[, dv])
 
-rmse_boost_prune <- boost_learn(prune_tree, train_set, dv) |>
+boost_oos_rmse_tree <- boost_learn(tree, train_set, dv) |>
   boost_predict(test_set) |> rmse_oos(actuals = test_set[, dv])
 
-rmse_boost_ols
-rmse_boost_prune
+boost_oos_rmse_ols
+boost_oos_rmse_tree
 
 # Double Bagging
 set.seed(2012)
@@ -157,10 +176,10 @@ rms_dbt <- double_bagged_learn(estimated_model = tree , dataset = train_set, b =
   bagged_predict(new_data = test_set) |>
   rmse_oos(actuals = test_set[, dv])
 
-# Comparing the errors from bagging, boosting and double-bagging of ols and pruned tree
-bag_boost_comparison <- matrix(c(rmse_bag_ols, rmse_bag_prune, rmse_boost_ols, rmse_boost_prune, rms_db_ols, rms_dbt), ncol = 2, byrow = TRUE)
+# Comparing the errors from bagging, boosting and double-bagging of ols and tree
+bag_boost_comparison <- matrix(c(rmse_bag_ols, rmse_bag_tree, rmse_boost_ols, rmse_boost_tree, rms_db_ols, rms_dbt), ncol = 2, byrow = TRUE)
 
-colnames(bag_boost_comparison) <- c("rmse_ols", "rmse_prune")
+colnames(bag_boost_comparison) <- c("rmse_ols", "rmse_tree")
 rownames(bag_boost_comparison) <- c("bag", "boost", "double_bag")
 
 bag_boost_comparison
