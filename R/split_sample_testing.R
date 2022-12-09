@@ -198,13 +198,38 @@ rownames(error_comparison) <- c("split-sample_ols", "split-sample_tree", "k-fold
 error_comparison
 
 ## Implementing k_fold with caret package
-# Defining training control as cross-validation with k = 10
+# Defining training control as cross-validation with k = 100
 set.seed(2012)
-train_control <- trainControl(method = "cv", p = 0.75 , number = 100, savePredictions = TRUE)
+train_control <- trainControl(method = "cv", number = 100, savePredictions = TRUE)
 
-# Training the model
-caret_ols <- train(model_formula, data = fulldata, method = "rpart2", trControl = train_control)
+# ols
+caret_ols <- train(model_formula, data = train_set, method = "lm", trControl = train_control)
 
-caret_ols$pred
+#caret_rmse_ols <- caret_ols$results$RMSE
+#caret_rmse_ols
 
-caret_ols$results$RMSE
+caret_ols_preds_is <- predict(caret_ols, train_set)
+caret_ols_preds_oos <- predict(caret_ols, test_set)
+
+caret_oos_rmse_is <- rmse_oos(actuals = train_set[, dv], preds = caret_ols_preds_is)
+caret_oos_rmse_ols <- rmse_oos(actuals = test_set[, dv], preds = caret_ols_preds_oos)
+
+caret_oos_rmse_is # still rmse_is > rmse_oos
+caret_oos_rmse_ols
+
+# tree
+caret_tree <- train(model_formula, data = train_set, method = "rpart", trControl = train_control)
+                    #tuneGrid = data.frame(
+                    #  cp = c(0.0001, 0.001, 0.35, 0.65)))
+
+#caret_rmse_tree <- caret_tree$results$RMSE
+#caret_rmse_tree
+
+caret_tree_preds_is <- predict(caret_tree, train_set)
+caret_tree_preds_oos <- predict(caret_tree, test_set)
+
+caret_tree_rmse_is <- rmse_oos(actuals = train_set[, dv], preds = caret_tree_preds_is)
+caret_tree_rmse_ols <- rmse_oos(actuals = test_set[, dv], preds = caret_tree_preds_oos)
+
+caret_tree_rmse_is # still rmse_is > rmse_oos
+caret_tree_rmse_ols
