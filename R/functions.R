@@ -74,20 +74,25 @@ boost_predict <- function(boosted_learning, new_data) {
 }
 
 # Random Forest
-bagged_learn_forest <- function(estimated_model, dataset, b=100, p, m, outcome) {
+double_bagged_learn <- function(estimated_model, dataset, b=100, p, m, outcome) {
   m <- length(p)/3 # default m
   lapply(1:b, \(i) { # from bootstrap 1 to b
     data_i <- dataset[sample(nrow(dataset), replace = TRUE),] # shuffle rows with replacement
-      lapply(1:length(p), \(i) { # from variable 1 to p
-        pred_i <- p[sample(length(p), size = round(m, 0), replace = FALSE)] # randomly extract m variables without replacement
-        random_preds <- paste(outcome, "~", pred_i[1]) # start creating new model_formula according to extracted predictors
-        for(i in 1:(length(random_preds) - 1)){ # repeat m times
-          random_preds <- paste(random_preds,"+", test[i + 1]) # add a predictor to formula
-        }
-        new_pred_formula <- as.formula(random_preds)
-      })
-    # update(estimated_model, data=data_i,)
-      lm(new_pred_formula, data = data_i) # run models
+    
+    # lapply(1:length(p), \(i) { # from variable 1 to p
+    #   pred_i <- p[sample(length(p), size = round(m, 0), replace = FALSE)] # randomly extract m variables without replacement
+    #   random_preds <- paste(outcome, "~", pred_i[1]) # start creating new model_formula according to extracted predictors
+    #   for(i in 1:(length(random_preds) - 1)){ # repeat m times
+    #     random_preds <- paste(random_preds,"+", test[i + 1]) # add a predictor to formula
+    #   }
+    #   new_pred_formula <- as.formula(random_preds)
+    # })
+    random_preds <- sample(p, size=m) |> paste(collapse = " + ")
+    formula_str <- paste(dv, random_preds, sep = " ~ ")
+    new_pred_formula <- as.formula(formula_str)
+  
+    # lm(new_pred_formula, data = data_i) # run models
+    new_estimated_model <- update(ols, formula = new_pred_formula, data = data_i)
   })
 }
 
