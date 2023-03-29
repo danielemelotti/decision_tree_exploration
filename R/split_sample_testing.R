@@ -4,7 +4,7 @@ source("R/functions.R")
 ### Comparing the predictive accuracy of an OLS model and a Regression Tree by implementing Split-sample Cross Validation, Bootstrap, LOOCV, Bagging and Boosting.
 
 # Performing a 75:25 split
-set.seed(2012)
+set.seed(123)
 train_indices <- sample(seq_len(nrow(fulldata)), size = 0.75 * nrow(fulldata))
 
 # Creating the train and test sets
@@ -83,7 +83,7 @@ sample_boot <- function(dataset, model_formula, yvar) {
   error_comparison <- c(rmse_is_ols, rmse_oos_ols, rmse_is_tree, rmse_oos_tree)
 }
 
-set.seed(2012)
+set.seed(123)
 boot_rmse <- replicate(25, sample_boot(fulldata, model_formula, dv))
 
 # Comparing is and oos errors of ols, tree and pruned tree
@@ -103,8 +103,8 @@ rownames(comparison) <- c("is", "oos")
 comparison
 
 ## Implementing k-fold Cross-Validation
-k_fold_rmse_ols <- k_fold_rmse(ols, fulldata, dv, k = 100, seed = 2012)
-k_fold_rmse_tree <- k_fold_rmse(tree, fulldata, dv, k = 100, seed = 2012)
+k_fold_rmse_ols <- k_fold_rmse(ols, fulldata, dv, k = 100, seed = 123)
+k_fold_rmse_tree <- k_fold_rmse(tree, fulldata, dv, k = 100, seed = 123)
 
 k_fold_rmse_ols # still oos < is ...
 k_fold_rmse_tree 
@@ -114,11 +114,11 @@ k_fold_rmse_tree
 ## Implementing Bagging
 # Computing the is and oos RMSEs between ols and tree bagged models
 # is
-bag_is_rmse_ols <- bagged_learn(estimated_model = ols, dataset = train_set, seed = 2012) |>
+bag_is_rmse_ols <- bagged_learn(estimated_model = ols, dataset = train_set, seed = 123) |>
   bagged_predict(new_data = train_set) |>
   rmse_oos(actuals = train_set[, dv])
 
-bag_is_rmse_tree <- bagged_learn(estimated_model = tree, dataset = train_set, seed = 2012) |>
+bag_is_rmse_tree <- bagged_learn(estimated_model = tree, dataset = train_set, seed = 123) |>
   bagged_predict(new_data = train_set) |>
   rmse_oos(actuals = train_set[, dv])
 
@@ -126,11 +126,11 @@ bag_is_rmse_ols
 bag_is_rmse_tree
 
 # oos
-bag_oos_rmse_ols <- bagged_learn(estimated_model = ols, dataset = train_set, seed = 2012) |>
+bag_oos_rmse_ols <- bagged_learn(estimated_model = ols, dataset = train_set, seed = 123) |>
   bagged_predict(new_data = test_set) |>
   rmse_oos(actuals = test_set[, dv])
 
-bag_oos_rmse_tree <- bagged_learn(estimated_model = tree, dataset = train_set, seed = 2012) |>
+bag_oos_rmse_tree <- bagged_learn(estimated_model = tree, dataset = train_set, seed = 123) |>
   bagged_predict(new_data = test_set) |>
   rmse_oos(actuals = test_set[, dv])
 
@@ -159,13 +159,13 @@ boost_oos_rmse_tree <- boost_learn(tree, train_set, dv) |>
 boost_oos_rmse_ols
 boost_oos_rmse_tree
 
-## Simple Forest!
+## Simple Forest
 # is
-sf_is_rmse_ols <- simple_forest(estimated_model = ols , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
+sf_is_rmse_ols <- simple_forest(estimated_model = ols , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 123) |>
   bagged_predict(new_data = train_set) |>
   rmse_oos(actuals = train_set[, dv])
 
-sf_is_rmse_tree <- simple_forest(estimated_model = tree , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
+sf_is_rmse_tree <- simple_forest(estimated_model = tree , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 123) |>
   bagged_predict(new_data = train_set) |>
   rmse_oos(actuals = train_set[, dv])
 
@@ -173,11 +173,11 @@ sf_is_rmse_ols
 sf_is_rmse_tree
 
 # oos
-sf_oos_rmse_ols <- simple_forest(estimated_model = ols , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
+sf_oos_rmse_ols <- simple_forest(estimated_model = ols , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 123) |>
   bagged_predict(new_data = test_set) |>
   rmse_oos(actuals = test_set[, dv])
 
-sf_oos_rmse_tree <- simple_forest(estimated_model = tree , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
+sf_oos_rmse_tree <- simple_forest(estimated_model = tree , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 123) |>
   bagged_predict(new_data = test_set) |>
   rmse_oos(actuals = test_set[, dv])
 
@@ -185,7 +185,7 @@ sf_oos_rmse_ols
 sf_oos_rmse_tree
 
 # Complete error comparison
-error_comparison <- matrix(c(rmse_is_ols, rmse_oos_ols, rmse_is_tree, rmse_oos_tree, NA,
+error_comparison_1 <- matrix(c(rmse_is_ols, rmse_oos_ols, rmse_is_tree, rmse_oos_tree, NA,
                              k_fold_rmse_ols, NA, k_fold_rmse_tree, bag_is_rmse_ols,
                              bag_oos_rmse_ols, bag_is_rmse_tree, bag_oos_rmse_tree, boost_is_rmse_ols,
                              boost_oos_rmse_ols, boost_is_rmse_tree, boost_oos_rmse_tree, sf_is_rmse_ols,
@@ -201,7 +201,7 @@ error_comparison
 
 ## Implementing k_fold with caret package
 # Defining training control as cross-validation with k = 100
-set.seed(2012)
+set.seed(123)
 train_control <- trainControl(method = "cv", number = 100, savePredictions = TRUE)
 
 # ols
