@@ -1,32 +1,4 @@
-### Running a DEMO of rpart on a continuous outcome variable
-# Available at: https://github.com/danielemelotti/decision_tree_exploration
-
-## Installing the necessary packages:
-install.packages("rpart")
-install.packages("rpart.plot")
-install.packages("rattle")
-install.packages("randomForest")
-install.packages("ranger")
-require(rpart)
-require(rpart.plot)
-require(rattle)
-require(dplyr)
-require(randomForest)
-require(ranger)
-
-# For the purpose of this exercise, we'll be using a dataset regarding housing prices in Miami.
-# The dataset can be downloaded from: https://www.kaggle.com/datasets/deepcontractor/miami-housing-dataset
-# The dataset includes a total of 17 variables.
-
-## Loading specific data and model_formula
-DL_data <- read.csv("miami-housing.csv")
-str(DL_data)
-
-# Filtering for the variables of interest
-fulldata <- DL_data %>%
-  select(-c("LATITUDE","LONGITUDE", "PARCELNO", "month_sold"))
-
-str(fulldata)
+### Comparing the predictive accuracy of an OLS model and a Regression Tree by implementing Split-sample Cross Validation, Bootstrap, LOOCV, Bagging and Boosting.
 
 dv <- "SALE_PRC" # outcome variable
 model_formula <- SALE_PRC ~ LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + RAIL_DIST + OCEAN_DIST +
@@ -57,16 +29,9 @@ summary(ols)
 tree <- rpart(model_formula, data = train_set)
 rpart.plot(tree, type = 2)
 
-# DESCRIPTION: The top value is the average house price for the houses included within a 
-# certain node. For example, the root node shows that in the whole train data, the average
-# cost for a house is 401,000; the root's left child node instead presents an average cost
-# of 355,000 (for houses that have a floor area < 3460 sq feet). The values will vary if the seed is changed.
-# The lower value represents the percentage of the whole data which is included at that node 
-# (and therefore satisfies the decision criteria at every split up to that point).
+# DESCRIPTION: The top value is the average house price for the houses included within a certain node. For example, the root node shows that in the whole train data, the average cost for a house is 401,000; the root's left child node instead presents an average cost of 355,000 (for houses that have a floor area < 3460 sq feet). The values will vary if the seed is changed. The lower value represents the percentage of the whole data which is included at that node (and therefore satisfies the decision criteria at every split up to that point).
 
-# COMMENT: In classification trees there is one more value in each node, just between the two
-# just described values, which is the probability. See https://www.guru99.com/r-decision-trees.html 
-# for an extensive explanation of classification trees.
+# COMMENT: In classification trees there is one more value in each node, just between the two just described values, which is the probability. See https://www.guru99.com/r-decision-trees.html for an extensive explanation of classification trees.
 
 ## Understanding the pruning mechanism with printcp()
 printcp(tree)
@@ -90,20 +55,13 @@ printcp(tree)
 # - xerror: It is computed using a 10-fold cross-validation.
 # - xstd: 
 
-# As we can see, printcp() automatically prints out the optimal number of nodes basing on
-# the CP (Complexity Parameter). rpart does not always deliver a pruned tree (see: 
-# https://stackoverflow.com/questions/13136683/is-rpart-automatic-pruning#:~:text=No%2C%20but%20the%20defaults%20for,definition%20of%20%22early%22).)
-# Sometimes, we need to prune it on our own by considering the xerror and cp. The convention says that we 
-# should select the CP from the list with the smallest cross-validated error (xerror in the table).
-# In other words, we shall select the lowest xerror, then prune the tree by setting the CP equal to
-# the CP corresponding to such error.
+# As we can see, printcp() automatically prints out the optimal number of nodes basing onthe CP (Complexity Parameter). rpart does not always deliver a pruned tree (see: https://stackoverflow.com/questions/13136683/is-rpart-automatic-pruning#:~:text=No%2C%20but%20the%20defaults%20for,definition%20of%20%22early%22).) Sometimes, we need to prune it on our own by considering the xerror and cp. The convention says that we  should select the CP from the list with the smallest cross-validated error (xerror in the table). In other words, we shall select the lowest xerror, then prune the tree by setting the CP equal to the CP corresponding to such error.
 
 # Here is a way to find out the cp related to the lowest xerror without extensively looking through the table
 c_par <- tree$cptable[which.min(tree$cptable[, "xerror"]), "CP"]
 c_par
 
-# We see that the lowest xerror is actually related to the very last split. Hence, there would be no real need 
-# to prune the tree.
+# We see that the lowest xerror is actually related to the very last split. Hence, there would be no real need to prune the tree.
 
 ## Pruning the tree according to c_par
 prune_tree <- prune(tree, cp = c_par)
@@ -112,9 +70,7 @@ rpart.plot(prune_tree)
 # Plotting the tree with fancyRpartPlot
 fancyRpartPlot(prune_tree)
 
-# The number on the top of each node represents the branch numbers in the textual representation
-# of the trees as generated by the default print() method. See:
-# https://stackoverflow.com/questions/45570298/what-does-the-number-on-top-of-a-node-in-a-fancyrpartplot-decision-tree-mean.
+# The number on the top of each node represents the branch numbers in the textual representation of the trees as generated by the default print() method. See: https://stackoverflow.com/questions/45570298/what-does-the-number-on-top-of-a-node-in-a-fancyrpartplot-decision-tree-mean.
 
 ## Showing the set of possible cost-complexity prunings of a tree from a nested set with plotcp().
 # https://rdrr.io/cran/itree/man/plotcp.html
@@ -122,11 +78,7 @@ fancyRpartPlot(prune_tree)
 plotcp(tree)
 plotcp(prune_tree)
 
-# DESCRIPTION: What is the dotted line in plotcp()?
-# The function plots the cp values against their related xerror, with xstd included.
-# The dotted line represents the highest cross-validated error less than the minimum cross-validated
-# error plus 1 standard deviation of the error at that tree. See
-# https://stackoverflow.com/questions/21698540/whats-the-meaning-of-plotcp-result-in-rpart for reference.
+# DESCRIPTION: What is the dotted line in plotcp()? The function plots the cp values against their related xerror, with xstd included.The dotted line represents the highest cross-validated error less than the minimum cross-validated error plus 1 standard deviation of the error at that tree. See https://stackoverflow.com/questions/21698540/whats-the-meaning-of-plotcp-result-in-rpart for reference.
 
 ## Producing predictions
 # Creating a list of models
@@ -138,11 +90,7 @@ purchase_predicted_tree <- predict(tree, test_set)
 purchase_predicted_prune <- predict(prune_tree, test_set)
 
 ## Reporting prediction accuracy using Root Mean Squared Error (RMSE)
-# Creating a function to calculate the RMSE out of sample
-rmse_is <- function(estimated_model) {
-  sqrt(mean(residuals(estimated_model)^2))
-}
-  
+
 # In-sample trained model_formula RMSE, comparison of ols vs Pruned Tree:
 rmse_is_ols <- round(rmse_is(ols), 4)
 rmse_is_tree <- round(rmse_is(tree), 4)
@@ -151,11 +99,6 @@ rmse_is_prune <- round(rmse_is(prune_tree), 4)
 rmse_is_ols
 rmse_is_tree
 rmse_is_prune
-
-# Creating a function to calculate the RMSE out of sample
-rmse_oos <- function(actuals, preds) {
-  sqrt(mean((preds - actuals)^2))
-}
 
 # Out-of-sample test data RMSE:
 rmse_oos_ols <- rmse_oos(purchase_predicted_ols, test_set[, dv])
@@ -197,12 +140,12 @@ sample_boot <- function(dataset, model_formula, yvar) {
   
   # Storing the errors in a dataframe
   error_comparison <- c(rmse_is_ols, rmse_oos_ols, rmse_is_tree, rmse_oos_tree,
-                                 rmse_is_prune, rmse_oos_prune)
+                        rmse_is_prune, rmse_oos_prune)
 }
 
 set.seed(2012)
 boot_rmse <- replicate(100, sample_boot(fulldata, model_formula, dv))
- 
+
 boot_rmse_is_ols <- mean(boot_rmse[1, ])
 boot_rmse_oos_ols <- mean(boot_rmse[2, ])
 boot_rmse_is_tree <- mean(boot_rmse[3, ])
@@ -232,7 +175,7 @@ fold_i_pe <- function(i, k, estimated_model, dataset, outcome) {
 k_fold_rmse <- function(estimated_model, dataset, outcome, k=10) {
   shuffled_indicies <- sample(1:nrow(dataset))
   dataset <- dataset[shuffled_indicies,]
-
+  
   fold_pred_errors <- sapply(1:k, \(kth) {
     fold_i_pe(kth, k, estimated_model, dataset, outcome)
   })
@@ -251,18 +194,6 @@ k_fold_rmse_tree
 k_fold_rmse_prune
 
 ## Implementing Bagging
-# Creating the functions for learning and predicting
-bagged_learn <- function(estimated_model, dataset, b=100) {
-  lapply(1:b, \(i) {
-    data_i <- dataset[sample(nrow(dataset), replace=TRUE),]
-    update(estimated_model, data=data_i) 
-  })
-}
-
-bagged_predict <- function(bagged_models, new_data) {
-  predictions <- lapply(bagged_models, \(m) predict(m, new_data))
-  as.data.frame(predictions) |> apply(FUN=mean, MARGIN=1)
-}
 
 # Computing the RMSEs between ols and prune_tree bagged models
 rmse_bag_ols <- bagged_learn(estimated_model = ols, dataset = train_set) |>
@@ -277,34 +208,7 @@ rmse_bag_ols
 rmse_bag_prune
 
 ## Implementing Boosting
-# Creating the functions for learning and predicting
-boost_learn <- function(estimated_model, dataset, outcome, n=100, rate=0.1) { 
-  predictors <- dataset[,-which(names(dataset) == outcome)]
-  
-  res <- dataset[,outcome]
-  models <- list()
-  
-  for (i in 1:n) {
-    new_data <- cbind(res, predictors)
-    colnames(new_data)[1] = outcome
-    this_model <- update(estimated_model, data = new_data)
-    res <- res - rate * predict(this_model, dataset)
-    models[[i]] <- this_model
-  }
-  
-  list(models=models, rate=rate)
-}
-  
-boost_predict <- function(boosted_learning, new_data) {
-  boosted_models <- boosted_learning$models
-  rate <- boosted_learning$rate
-  predictions <- lapply(boosted_models, \(this_model) {
-    predict(this_model, new_data)
-  })
-  pred_frame <- as.data.frame(predictions) |> unname()
-  apply(pred_frame, FUN = \(preds) rate * sum(preds), MARGIN=1)
-}
-  
+
 # Comparing the RMSEs between ols and prune_tree boosted models
 rmse_boost_ols <- boost_learn(ols, train_set, dv) |>
   boost_predict(test_set) |> rmse_oos(actuals = test_set[, dv])
@@ -317,7 +221,7 @@ rmse_boost_prune
 
 # Final comparisons
 error_comparison <- matrix(c(rmse_is_ols, rmse_oos_ols, rmse_is_prune, rmse_oos_prune, k_fold_rmse_ols[1], 
-                       k_fold_rmse_ols[2], k_fold_rmse_prune[1], k_fold_rmse_prune[2]), ncol = 4, byrow = FALSE)
+                             k_fold_rmse_ols[2], k_fold_rmse_prune[1], k_fold_rmse_prune[2]), ncol = 4, byrow = FALSE)
 
 colnames(error_comparison) <- c("rmse_ols", "rmse_prune", "k_fold_rmse_ols", "k_fold_rmse_prune")
 rownames(error_comparison) <- c("is", "oos")
@@ -331,95 +235,3 @@ colnames(bag_boost_comparison) <- c("rmse_ols", "rmse_prune")
 rownames(bag_boost_comparison) <- c("bag", "boost")
 
 bag_boost_comparison
-
-## Implementing a random forest algorithm
-# It is done to overcome the issues of bagging. In fact, the trees from bagging are not completely 
-# independent of each other since all the original predictors are considered at every split of every tree.
-# For each tree, few strong predictors will be selected repeatedly, which will lead to very similar trees
-# (especially in the top nodes), and to highly correlated predictions, which will have almost always the same structure.
-
-# Random forest solves this issue in 2 ways potentially:
-# 1. Bootstrapping: similar to bagging, each tree is grown to a bootstrap resampled data set,
-# which makes them different and somewhat decorrelates them.
-# 2. Split-variable randomization: each time a split is to be performed, the search for the 
-# split variable is limited to a random subset of m of the p variables. For regression trees, 
-# typical default values are m = p/3, but this should be considered a tuning parameter.
-# When m = p, the randomization amounts to using only step 1 and is the same as bagging.
-# See https://uc-r.github.io/random_forests for reference.
-
-# Building the model on the train set
-rf_model <- randomForest(model_formula, data = train_set, importance = TRUE)
-
-# calculating the RMSE_is
-sqrt(mean(rf_model$mse))
-
-# We can see how the MSE decreases as more and more trees are developed
-plot(rf_model)
-
-# It looks like about 150 trees are enough to achieve a stable error rate
-
-# From this large number of trees, we can find the one with lowest MSE
-which.min(rf_model$mse)
-sqrt(rf_model$mse[which.min(rf_model$mse)])
-
-# Producing predictions with the random forest model
-test_pred <- predict(rf_model_2, newdata = test_set, type = "class")
-
-# Calculating the RMSE_oos
-rmse_oos(test_set$SALE_PRC, preds = test_pred)
-
-## Tuning the random forest algorithm
-# DESCRIPTION: randomForest parameters:
-# - ntree:number of trees;
-# - mtry: number of variables to randomly sample as candidates at each split; 
-# - sampsize: the number of samples to train on. Typically, the value should lay between 60 and 80%;
-# - nodesize: minimum number of samples within the terminal nodes. This parameters controls the complexity of the tree;
-# - maxnodes: maximum number of terminal nodes. This parameter controls the complexity of the tree.
-
-## Tuning with randomForest
-# Fetching the names of features
-features <- setdiff(names(train_set), "SALE_PRC")
-
-set.seed(2012)
-tuned_model <- tuneRF(
-  x = train_set[features],
-  y = train_set$Sale_Price,
-  ntreeTry = 150,
-  mtryStart = 2, # 6 features
-  stepFactor = 1, # we increment by 3 features until improvement stops...
-  improve = 0.01, #... improving by 1%
-  trace = FALSE # do not show real-time progress
-)
-
-## Tuning with ranger
-# Hyperparameter grid search
-hyper_grid <- expand.grid(
-  mtry       = seq(5, 10, by = 2),
-  node_size  = seq(3, 9, by = 2),
-  sample_size = c(.55, .632, .70, .80),
-  OOB_RMSE   = 0
-)
-
-# Total number of combinations
-nrow(hyper_grid)
-
-for(i in 1:nrow(hyper_grid)) {
-  
-  # train model
-  model <- ranger(
-    formula = SALE_PRC ~ ., 
-    data = train_set, 
-    num.trees = 150,
-    mtry = hyper_grid$mtry[i],
-    min.node.size = hyper_grid$node_size[i],
-    sample.fraction = hyper_grid$sample_size[i],
-    seed = 123
-  )
-  
-  # add OOB error to grid
-  hyper_grid$OOB_RMSE[i] <- sqrt(model$prediction.error)
-}
-
-hyper_grid %>% 
-  dplyr::arrange(OOB_RMSE) %>%
-  head(10)
