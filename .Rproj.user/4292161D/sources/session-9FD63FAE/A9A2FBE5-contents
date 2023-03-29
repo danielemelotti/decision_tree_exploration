@@ -1,8 +1,0 @@
-### rpart DEMO on a continuous outcome variable
-
-# The analysis is performed on a dataset containing car purchasing data.
-# The variables include customer name, email, country, gender, age, annual salary;
-# credit card debt, net worth and car purchase amount.
-
-# Let's load the dataset first:
-getwd()
