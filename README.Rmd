@@ -28,6 +28,7 @@ The project includes the comparison of RMSEs from different prediction technique
 - Bootstrapping
 - LOOCV
 - Bagging
+- Double-bagging
 - Boosting
 - Random Forest
 
