@@ -6,11 +6,13 @@ install.packages("rpart")
 install.packages("rpart.plot")
 install.packages("rattle")
 install.packages("randomForest")
+install.packages("ranger")
 require(rpart)
 require(rpart.plot)
 require(rattle)
 require(dplyr)
 require(randomForest)
+require(ranger)
 
 # For the purpose of this exercise, we'll be using a dataset regarding housing prices in Miami.
 # The dataset can be downloaded from: https://www.kaggle.com/datasets/deepcontractor/miami-housing-dataset
@@ -345,8 +347,6 @@ bag_boost_comparison
 # When m = p, the randomization amounts to using only step 1 and is the same as bagging.
 # See https://uc-r.github.io/random_forests for reference.
 
-
-
 # Building the model on the train set
 rf_model <- randomForest(model_formula, data = train_set, importance = TRUE)
 
@@ -365,3 +365,26 @@ test_pred <- predict(rf_model_2, newdata = test_set, type = "class")
 
 # Calculating the RMSE_oos
 rmse_oos(test_set$SALE_PRC, preds = test_pred)
+
+## Tuning the random forest algorithm
+# DESCRIPTION: randomForest parameters:
+# - ntree:number of trees;
+# - mtry: number of variables to randomly sample as candidates at each split; 
+# - sampsize: the number of samples to train on. Typically, the value should lay between 60 and 80%;
+# - nodesize: minimum number of samples within the terminal nodes. This parameters controls the complexity of the tree;
+# - maxnodes: maximum number of terminal nodes. This parameter controls the complexity of the tree.
+
+# Tuning with randomForest
+# Fetching the names of features
+features <- setdiff(names(train_set), "SALE_PRC")
+
+set.seed(2012)
+tuned_model <- tuneRF(
+  x = train_set[features],
+  y = train_set$Sale_Price,
+  ntreeTry = 25,
+  mtryStart = 2, # 6 features
+  stepFactor = 1, # we increment by 3 features until improvement stops...
+  improve = 0.01, #... improving by 1%
+  trace = FALSE # do not show real-time progress
+)
