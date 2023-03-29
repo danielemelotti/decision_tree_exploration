@@ -1,6 +1,9 @@
 # Plotting the data to inspect relationships
 plot(fulldata[, c(dv, "TOT_LVG_AREA", "RAIL_DIST", "CNTR_DIST", "age", "structure_quality")], col=rgb(0.7, 0.7, 0.7, 0.3)) # inspecting the relationships between the data
 
+# Regression summary
+summary(ols)
+
 # Visualizing the tree
 rpart.plot(tree, type = 2)
 

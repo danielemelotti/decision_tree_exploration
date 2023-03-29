@@ -44,11 +44,3 @@ xv_list <- find_predictors(model_formula) # list of predictors
 # xv_call <- formula.tools::rhs(model_formula) # predictors call
 
 table(is.na(fulldata)) # no missing values
-
-# Performing a 75:25 split
-set.seed(2012)
-train_indices <- sample(seq_len(nrow(fulldata)), size = 0.75 * nrow(fulldata))
-
-# Creating the train and test sets
-train_set <- fulldata[train_indices, ]
-test_set <- fulldata[-train_indices, ]
