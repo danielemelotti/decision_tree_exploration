@@ -79,24 +79,11 @@ double_bagged_learn <- function(estimated_model, dataset, b=100, p, m, outcome) 
   lapply(1:b, \(i) { # from bootstrap 1 to b
     data_i <- dataset[sample(nrow(dataset), replace = TRUE),] # shuffle rows with replacement
     
-    # lapply(1:length(p), \(i) { # from variable 1 to p
-    #   pred_i <- p[sample(length(p), size = round(m, 0), replace = FALSE)] # randomly extract m variables without replacement
-    #   random_preds <- paste(outcome, "~", pred_i[1]) # start creating new model_formula according to extracted predictors
-    #   for(i in 1:(length(random_preds) - 1)){ # repeat m times
-    #     random_preds <- paste(random_preds,"+", test[i + 1]) # add a predictor to formula
-    #   }
-    #   new_pred_formula <- as.formula(random_preds)
-    # })
     random_preds <- sample(p, size=m) |> paste(collapse = " + ")
     formula_str <- paste(dv, random_preds, sep = " ~ ")
     new_pred_formula <- as.formula(formula_str)
   
     # lm(new_pred_formula, data = data_i) # run models
-    new_estimated_model <- update(ols, formula = new_pred_formula, data = data_i)
+    new_estimated_model <- update(estimated_model, formula = new_pred_formula, data = data_i)
   })
-}
-
-double_bagged_predict <- function(bagged_models, new_data) {
-  predictions <- lapply(bagged_models, \(m) predict(m, new_data))
-  as.data.frame(predictions) |> apply(FUN=mean, MARGIN=1)
 }
