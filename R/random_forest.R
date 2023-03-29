@@ -76,7 +76,7 @@ hyper_grid <- expand.grid(
 # Total number of combinations
 nrow(hyper_grid)
 
-for(i in 1:nrow(hyper_grid)) {
+for(i in seq_len(nrow(hyper_grid))) {
   
   # train model
   model <- ranger(

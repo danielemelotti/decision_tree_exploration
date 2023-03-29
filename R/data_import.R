@@ -30,7 +30,7 @@ fulldata_ordered <- download_data %>%
   select(-"PARCELNO")
 
 # Shuffling the data to increase randomness
-fulldata <- fulldata_ordered[sample(1:nrow(fulldata_ordered)), ]
+fulldata <- fulldata_ordered[sample(seq_len(nrow(fulldata_ordered))), ]
 
 str(fulldata)
 
@@ -47,7 +47,7 @@ table(is.na(fulldata)) # no missing values
 
 # Performing a 75:25 split
 set.seed(2012)
-train_indices <- sample(1:nrow(fulldata), size = 0.75 * nrow(fulldata))
+train_indices <- sample(seq_len(nrow(fulldata)), size = 0.75 * nrow(fulldata))
 
 # Creating the train and test sets
 train_set <- fulldata[train_indices, ]

@@ -10,7 +10,7 @@ rmse_oos <- function(actuals, preds) {
 
 # k-Fold Cross-Validation
 fold_i_pe <- function(i, k, estimated_model, dataset, outcome) {
-  folds <- cut(1:nrow(dataset), breaks = k, labels = FALSE)
+  folds <- cut(seq_len(nrow(dataset)), breaks = k, labels = FALSE)
   test_indices <- which(folds == i)
   test_set <- dataset[test_indices, ]
   train_set <- dataset[-test_indices, ]
@@ -20,7 +20,7 @@ fold_i_pe <- function(i, k, estimated_model, dataset, outcome) {
 }
 
 k_fold_rmse <- function(estimated_model, dataset, outcome, k=10) {
-  shuffled_indicies <- sample(1:nrow(dataset))
+  shuffled_indicies <- sample(seq_len(nrow(dataset)))
   shuffled_dataset <- dataset[shuffled_indicies,]
 
   fold_pred_errors <- sapply(1:k, \(kth) {
