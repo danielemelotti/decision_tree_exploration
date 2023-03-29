@@ -1,22 +1,43 @@
 # Algorithms used in this project
 
-(1) Split-Sample Cross Validation
-(2) Leave-One-Out Cross Validation (LOOCV)
-(3) Bootstrapping
-(4) Bagging
-(5) Boosting
-(6) Random Forest
+(1) Split-Sample Cross-Validation
+(2) k-Fold Cross-Validation
+(3) Bagging
+(4) Boosting
+(5) Random Forest
 
-## (1) Split-Sample Cross Validation
+## (1) Split-Sample Cross-Validation
 
-## (2) Leave-One-Out Cross Validation (LOOCV)
+-   Step 1: Split data in train and test sets
+-   Step 2: Train the model on train set
+-   Step 3: Compute predictions on the test set using the trained model
+-   Step 4: Test predictions accuracy: compute and compare in-sample error with out-of-sample error
 
-### k-Fold Cross Validation
+## (2) k-Fold Cross-Validation
 
-## (3) Bootstrapping
+-   Step 1: Shuffle dataset rows
+-   Step 2: Split data in train and test sets k times
+-   Step 3: Train the model from each generated train set
+-   Step 4: Compute predictions on each test set using the trained models
+-   Step 5: Test predictions accuracy: compute and compare in-sample error with out-of-sample error 
 
-## (4) Bagging
+## (3) Bagging
 
-## (5) Boosting
+-   Step 1: Split data in train and test sets
+-   Step 2: Create resampled n train sets (resample with replacement)
+-   Step 3: Train the model from each generated train set
+-   Step 4: Compute predictions on the test set using the trained models
+-   Step 5: Average the predictions
+-   Step 6: Compute and compare in-sample error with out-of-sample error
 
-## (6) Random Forest
+## (4) Boosting
+
+-   Step 1: Split data in train and test sets
+-   Step 2: Train the model on train set
+-   Step 3: Compute predictions on the test set using the trained model
+-   Step 4: Extract fitted values
+-   Step 5: Calculate residuals (in-sample error)
+-   Step 6: Exchange the y variable of the model with the residuals, retrain the model on the train set
+-   Step 7: Set a learning rate to prevent overfitting, and repeat Steps 4, 5 and 6 n times
+
+## (5) Random Forest

@@ -8,7 +8,7 @@ rmse_oos <- function(actuals, preds) {
   sqrt(mean((preds - actuals)^2))
 }
 
-# LOOCV
+# k-Fold Cross-Validation
 fold_i_pe <- function(i, k, estimated_model, dataset, outcome) {
   folds <- cut(1:nrow(dataset), breaks=k, labels=FALSE)
   test_indices <- which(folds==i)
