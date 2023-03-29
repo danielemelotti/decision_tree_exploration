@@ -21,12 +21,12 @@ fold_i_pe <- function(i, k, estimated_model, dataset, outcome) {
 
 k_fold_rmse <- function(estimated_model, dataset, outcome, k=10) {
   shuffled_indicies <- sample(1:nrow(dataset))
-  dataset <- dataset[shuffled_indicies,]
-  
+  shuffled_dataset <- dataset[shuffled_indicies,]
+
   fold_pred_errors <- sapply(1:k, \(kth) {
-    fold_i_pe(kth, k, estimated_model, dataset, outcome)
+    fold_i_pe(kth, k, estimated_model, shuffled_dataset, outcome)
   })
-  
+
   pred_errors <- unlist(fold_pred_errors)
   rmse <- \(errs) sqrt(mean(errs^2))
   c(rmse_is = rmse(residuals(estimated_model)), rmse_oos = rmse(pred_errors))
@@ -36,7 +36,7 @@ k_fold_rmse <- function(estimated_model, dataset, outcome, k=10) {
 bagged_learn <- function(estimated_model, dataset, b=100) {
   lapply(1:b, \(i) {
     data_i <- dataset[sample(nrow(dataset), replace = TRUE),]
-    update(estimated_model, data=data_i) 
+    update(estimated_model, data=data_i)
   })
 }
 
@@ -46,12 +46,12 @@ bagged_predict <- function(bagged_models, new_data) {
 }
 
 # Boosting
-boost_learn <- function(estimated_model, dataset, outcome, n=100, rate=0.1) { 
+boost_learn <- function(estimated_model, dataset, outcome, n=100, rate=0.1) {
   predictors <- dataset[,-which(names(dataset) == outcome)]
-  
+
   res <- dataset[,outcome]
   models <- list()
-  
+
   for (i in 1:n) {
     new_data <- cbind(res, predictors)
     colnames(new_data)[1] = outcome
@@ -59,7 +59,7 @@ boost_learn <- function(estimated_model, dataset, outcome, n=100, rate=0.1) {
     res <- res - rate * predict(this_model, dataset)
     models[[i]] <- this_model
   }
-  
+
   list(models=models, rate=rate)
 }
 
@@ -73,16 +73,18 @@ boost_predict <- function(boosted_learning, new_data) {
   apply(pred_frame, FUN = \(preds) rate * sum(preds), MARGIN=1)
 }
 
-# Double Bagging 
+# Double Bagging
+#  - p: vector of predictors
+#  - m: number of predictors randomly chosen in each iteration
 double_bagged_learn <- function(estimated_model, dataset, b=100, p, m, outcome) {
   m <- length(p)/3 # default m
   lapply(1:b, \(i) { # from bootstrap 1 to b
     data_i <- dataset[sample(nrow(dataset), replace = TRUE),] # shuffle rows with replacement
-    
+
     random_preds <- sample(p, size=m) |> paste(collapse = " + ")
     formula_str <- paste(dv, random_preds, sep = " ~ ")
     new_pred_formula <- as.formula(formula_str)
-  
+
     # lm(new_pred_formula, data = data_i) # run models
     new_estimated_model <- update(estimated_model, formula = new_pred_formula, data = data_i)
   })
