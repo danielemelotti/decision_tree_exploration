@@ -8,6 +8,7 @@ install.packages("rattle")
 require(rpart)
 require(rpart.plot)
 require(rattle)
+require(dplyr)
 
 # For the purpose of this exercise, we'll be using a dataset containing car purchasing data.
 # The dataset can be downloaded from: https://www.kaggle.com/datasets/yashk07/car-purchase-price-beginner-dataset
@@ -147,6 +148,58 @@ rmse_oos_tree
 rmse_oos_prune
 
 # For the pruned tree, the RMSE_oos is greater than RMSE_is, as it should be. For the ols, that's not the case.
+
+# Bootstrapping the RMSEs to see if results are consistent
+sample_boot <- function(dataset, model, yvar) {
+  # Splitting the dataset in train and test sets
+  train_indices <- sample(1:nrow(cardata), size = 0.75 * nrow(cardata))
+  train_set <- cardata[train_indices, ]
+  test_set <- cardata[-train_indices, ]
+  
+  # Building the tree
+  tree <- rpart(model, data = train_set)
+  
+  # Finding the lowest cp, pruning the tree
+  c_par <- tree$cptable[which.min(tree$cptable[, "xerror"]), "CP"]
+  prune_tree <- prune(tree, cp = c_par)
+  
+  # Making predictions
+  purchase_predicted_ols <- predict(ols, test_set)
+  purchase_predicted_tree <- predict(tree, test_set)
+  purchase_predicted_prune <- predict(prune_tree, test_set)
+  
+  # Calculating in-sample errors
+  rmse_is_ols <- round(sqrt(mean(residuals(ols)^2)), 4)
+  rmse_is_tree <- round(sqrt(mean(residuals(tree)^2)), 4)
+  rmse_is_prune <- round(sqrt(mean(residuals(prune_tree)^2)), 4)
+  
+  # Calculating out-of-sample errors
+  rmse_oos_ols <- rmse_oos(purchase_predicted_ols, test_set[, yvar])
+  rmse_oos_tree <- rmse_oos(purchase_predicted_tree, test_set[, yvar])
+  rmse_oos_prune <- rmse_oos(purchase_predicted_prune, test_set[, yvar])
+  
+  # Storing the errors in a dataframe
+  error_comparison <- c(rmse_is_ols, rmse_oos_ols, rmse_is_tree, rmse_oos_tree,
+                                 rmse_is_prune, rmse_oos_prune)
+}
+
+set.seed(20221029)
+boot_rmse <- replicate(100, sample_boot(cardata, model, "Car.Purchase.Amount"))
+ 
+boot_rmse_is_ols <- mean(boot_rmse[1, ])
+boot_rmse_oos_ols <- mean(boot_rmse[2, ])
+boot_rmse_is_tree <- mean(boot_rmse[3, ])
+boot_rmse_oos_tree <- mean(boot_rmse[4, ])
+boot_rmse_is_prune <- mean(boot_rmse[5, ])
+boot_rmse_oos_prune <- mean(boot_rmse[6, ])
+
+comparison <- matrix(c(boot_rmse_is_ols, boot_rmse_oos_ols, boot_rmse_is_tree, boot_rmse_oos_tree, 
+                       boot_rmse_is_prune, boot_rmse_oos_prune), ncol = 3, byrow = FALSE)
+
+colnames(comparison) <- c("rmse_ols", "rmse_tree", "rmse_prune")
+rownames(comparison) <- c("is", "oos")
+
+comparison
 
 ## Implementing LOOCV
 fold_i_pe <- function(i, k, model, dataset, outcome) {
