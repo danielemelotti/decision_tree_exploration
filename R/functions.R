@@ -30,7 +30,7 @@ k_fold_rmse <- function(estimated_model, dataset, outcome, k=10, seed) {
 
   pred_errors <- unlist(fold_pred_errors)
   rmse <- \(errs) sqrt(mean(errs^2))
-  c(rmse_is = rmse(residuals(estimated_model)), rmse_oos = rmse(pred_errors))
+  c(rmse_is = rmse(residuals(estimated_model)), rmse_oos = rmse(pred_errors)) # remove rmse_is
 }
 
 # Bagging
@@ -75,10 +75,10 @@ boost_predict <- function(boosted_learning, new_data) {
   apply(pred_frame, FUN = \(preds) rate * sum(preds), MARGIN=1)
 }
 
-# Double Bagging
+# Simple forest 
 #  - p: vector of predictors
 #  - m: number of predictors randomly chosen in each iteration
-double_bagged_learn <- function(estimated_model, dataset, b=100, p, m, outcome, seed) {
+simple_forest <- function(estimated_model, dataset, b=100, p, m, outcome, seed) {
   set.seed(seed)
   m <- length(p)/3 # default m
   lapply(1:b, \(i) { # from bootstrap 1 to b

@@ -109,6 +109,8 @@ k_fold_rmse_tree <- k_fold_rmse(tree, fulldata, dv, k = 100, seed = 2012)
 k_fold_rmse_ols # still oos < is ...
 k_fold_rmse_tree 
 
+# should compare datasets with same proportions
+
 ## Implementing Bagging
 # Computing the is and oos RMSEs between ols and tree bagged models
 # is
@@ -157,7 +159,7 @@ boost_oos_rmse_tree <- boost_learn(tree, train_set, dv) |>
 boost_oos_rmse_ols
 boost_oos_rmse_tree
 
-## Double Bagging
+## Double Bagging - ### name changed to simple_forest!
 # is
 db_is_rmse_ols <- double_bagged_learn(estimated_model = ols , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
   bagged_predict(new_data = train_set) |>
@@ -203,19 +205,19 @@ set.seed(2012)
 train_control <- trainControl(method = "cv", number = 100, savePredictions = TRUE)
 
 # ols
-caret_ols <- train(model_formula, data = train_set, method = "lm", trControl = train_control)
+caret_ols <- train(model_formula, data = fulldata, method = "lm", trControl = train_control) ### fulldata
 
-#caret_rmse_ols <- caret_ols$results$RMSE
-#caret_rmse_ols
+caret_rmse_ols <- caret_ols$results$RMSE
+caret_rmse_ols
 
 caret_ols_preds_is <- predict(caret_ols, train_set)
 caret_ols_preds_oos <- predict(caret_ols, test_set)
 
-caret_oos_rmse_is <- rmse_oos(actuals = train_set[, dv], preds = caret_ols_preds_is)
-caret_oos_rmse_ols <- rmse_oos(actuals = test_set[, dv], preds = caret_ols_preds_oos)
+caret_ols_rmse_is <- rmse_oos(actuals = train_set[, dv], preds = caret_ols_preds_is)
+caret_ols_rmse_oos <- rmse_oos(actuals = test_set[, dv], preds = caret_ols_preds_oos)
 
-caret_oos_rmse_is # still rmse_is > rmse_oos
-caret_oos_rmse_ols
+caret_ols_rmse_is # still rmse_is > rmse_oos
+caret_ols_rmse_oos
 
 # tree
 caret_tree <- train(model_formula, data = train_set, method = "rpart", trControl = train_control)
@@ -229,7 +231,7 @@ caret_tree_preds_is <- predict(caret_tree, train_set)
 caret_tree_preds_oos <- predict(caret_tree, test_set)
 
 caret_tree_rmse_is <- rmse_oos(actuals = train_set[, dv], preds = caret_tree_preds_is)
-caret_tree_rmse_ols <- rmse_oos(actuals = test_set[, dv], preds = caret_tree_preds_oos)
+caret_tree_rmse_oos <- rmse_oos(actuals = test_set[, dv], preds = caret_tree_preds_oos)
 
 caret_tree_rmse_is # still rmse_is > rmse_oos
-caret_tree_rmse_ols
+caret_tree_rmse_oos
