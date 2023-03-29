@@ -1,17 +1,17 @@
-# Creating a function to calculate the RMSE out of sample
+# In-sample RMSE
 rmse_is <- function(estimated_model) {
   sqrt(mean(residuals(estimated_model)^2))
 }
 
-# Creating a function to calculate the RMSE out of sample
+# Out-of-sample RMSE
 rmse_oos <- function(actuals, preds) {
   sqrt(mean((preds - actuals)^2))
 }
 
 # k-Fold Cross-Validation
 fold_i_pe <- function(i, k, estimated_model, dataset, outcome) {
-  folds <- cut(1:nrow(dataset), breaks=k, labels=FALSE)
-  test_indices <- which(folds==i)
+  folds <- cut(1:nrow(dataset), breaks = k, labels = FALSE)
+  test_indices <- which(folds == i)
   test_set <- dataset[test_indices, ]
   train_set <- dataset[-test_indices, ]
   trained_model <- update(estimated_model, data = train_set)
@@ -32,10 +32,10 @@ k_fold_rmse <- function(estimated_model, dataset, outcome, k=10) {
   c(rmse_is = rmse(residuals(estimated_model)), rmse_oos = rmse(pred_errors))
 }
 
-# Creating the functions for learning and predicting (Bagging)
+# Bagging
 bagged_learn <- function(estimated_model, dataset, b=100) {
   lapply(1:b, \(i) {
-    data_i <- dataset[sample(nrow(dataset), replace=TRUE),]
+    data_i <- dataset[sample(nrow(dataset), replace = TRUE),]
     update(estimated_model, data=data_i) 
   })
 }
@@ -45,7 +45,7 @@ bagged_predict <- function(bagged_models, new_data) {
   as.data.frame(predictions) |> apply(FUN=mean, MARGIN=1)
 }
 
-# Creating the functions for learning and predicting (Boosting)
+# Boosting
 boost_learn <- function(estimated_model, dataset, outcome, n=100, rate=0.1) { 
   predictors <- dataset[,-which(names(dataset) == outcome)]
   
@@ -71,4 +71,28 @@ boost_predict <- function(boosted_learning, new_data) {
   })
   pred_frame <- as.data.frame(predictions) |> unname()
   apply(pred_frame, FUN = \(preds) rate * sum(preds), MARGIN=1)
+}
+
+# Random Forest
+bagged_learn_forest <- function(estimated_model, dataset, b=100, p, m = length(p)/3) {
+  lapply(1:b, \(i) {
+    data_i <- dataset[sample(nrow(dataset), replace = TRUE),]
+      lapply(1:length(p$conditional), \(i) {
+        pred_i <- p[sample(length(p$conditional), size = round(m, 0), replace = FALSE)]
+        
+      })
+    update(estimated_model, data=data_i,) 
+  })
+}
+
+# OWN TEST
+test<-xv_list$conditional[sample(length(xv_list$conditional), size = round(length(xv_list$conditional)/3, 0), replace = FALSE)]
+# test contains sampled predictors. How to put them inside model formula?
+sas<-paste(dv, "~", test[1], "+", test[2])
+sas<- as.formula(sas)
+class(sas)
+
+bagged_predict_forest <- function(bagged_models, new_data) {
+  predictions <- lapply(bagged_models, \(m) predict(m, new_data))
+  as.data.frame(predictions) |> apply(FUN=mean, MARGIN=1)
 }
