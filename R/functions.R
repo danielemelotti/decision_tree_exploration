@@ -30,7 +30,8 @@ k_fold_rmse <- function(estimated_model, dataset, outcome, k=10, seed) {
 
   pred_errors <- unlist(fold_pred_errors)
   rmse <- \(errs) sqrt(mean(errs^2))
-  c(rmse_is = rmse(residuals(estimated_model)), rmse_oos = rmse(pred_errors)) # remove rmse_is
+  rmse_oos <- rmse(pred_errors)
+  rmse_oos
 }
 
 # Bagging

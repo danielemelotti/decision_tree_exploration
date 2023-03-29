@@ -159,43 +159,43 @@ boost_oos_rmse_tree <- boost_learn(tree, train_set, dv) |>
 boost_oos_rmse_ols
 boost_oos_rmse_tree
 
-## Double Bagging - ### name changed to simple_forest!
+## Simple Forest!
 # is
-db_is_rmse_ols <- double_bagged_learn(estimated_model = ols , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
+sf_is_rmse_ols <- simple_forest(estimated_model = ols , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
   bagged_predict(new_data = train_set) |>
   rmse_oos(actuals = train_set[, dv])
 
-db_is_rmse_tree <- double_bagged_learn(estimated_model = tree , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
+sf_is_rmse_tree <- simple_forest(estimated_model = tree , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
   bagged_predict(new_data = train_set) |>
   rmse_oos(actuals = train_set[, dv])
 
-db_is_rmse_ols
-db_is_rmse_tree
+sf_is_rmse_ols
+sf_is_rmse_tree
 
 # oos
-db_oos_rmse_ols <- double_bagged_learn(estimated_model = ols , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
+sf_oos_rmse_ols <- simple_forest(estimated_model = ols , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
   bagged_predict(new_data = test_set) |>
   rmse_oos(actuals = test_set[, dv])
 
-db_oos_rmse_tree <- double_bagged_learn(estimated_model = tree , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
+sf_oos_rmse_tree <- simple_forest(estimated_model = tree , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
   bagged_predict(new_data = test_set) |>
   rmse_oos(actuals = test_set[, dv])
 
-db_oos_rmse_ols
-db_oos_rmse_tree
+sf_oos_rmse_ols
+sf_oos_rmse_tree
 
 # Complete error comparison
-error_comparison <- matrix(c(rmse_is_ols, rmse_oos_ols, rmse_is_tree, rmse_oos_tree, k_fold_rmse_ols[1],
-                             k_fold_rmse_ols[2], k_fold_rmse_tree[1], k_fold_rmse_tree[2], bag_is_rmse_ols,
+error_comparison <- matrix(c(rmse_is_ols, rmse_oos_ols, rmse_is_tree, rmse_oos_tree, NA,
+                             k_fold_rmse_ols, NA, k_fold_rmse_tree, bag_is_rmse_ols,
                              bag_oos_rmse_ols, bag_is_rmse_tree, bag_oos_rmse_tree, boost_is_rmse_ols,
-                             boost_oos_rmse_ols, boost_is_rmse_tree, boost_oos_rmse_tree, db_is_rmse_ols,
-                             db_oos_rmse_ols, db_is_rmse_tree, db_oos_rmse_tree), ncol = 2, byrow = 
+                             boost_oos_rmse_ols, boost_is_rmse_tree, boost_oos_rmse_tree, sf_is_rmse_ols,
+                             sf_oos_rmse_ols, sf_is_rmse_tree, sf_oos_rmse_tree), ncol = 2, byrow = 
                              TRUE)
 
 colnames(error_comparison) <- c("is", "oos")
 rownames(error_comparison) <- c("split-sample_ols", "split-sample_tree", "k-fold_ols", "f-fold_tree",
                                     "bagging_ols", "bagging_tree", "boosting_ols", "boosting_tree", 
-                                    "double-bagging_ols", "double-bagging_tree")
+                                    "simple-forest_ols", "simple-forest_tree")
 
 error_comparison
 
