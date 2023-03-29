@@ -114,11 +114,11 @@ k_fold_rmse_tree
 # is
 bag_is_rmse_ols <- bagged_learn(estimated_model = ols, dataset = train_set, seed = 2012) |>
   bagged_predict(new_data = train_set) |>
-  rmse_oos(actuals = test_set[, dv])
+  rmse_oos(actuals = train_set[, dv])
 
 bag_is_rmse_tree <- bagged_learn(estimated_model = tree, dataset = train_set, seed = 2012) |>
   bagged_predict(new_data = train_set) |>
-  rmse_oos(actuals = test_set[, dv])
+  rmse_oos(actuals = train_set[, dv])
 
 bag_is_rmse_ols
 bag_is_rmse_tree
@@ -139,10 +139,10 @@ bag_oos_rmse_tree
 # Comparing the is and oos RMSEs between ols and tree boosted models
 # is
 boost_is_rmse_ols <- boost_learn(ols, train_set, dv) |>
-  boost_predict(test_set) |> rmse_oos(actuals = train_set[, dv])
+  boost_predict(train_set) |> rmse_oos(actuals = train_set[, dv])
 
 boost_is_rmse_tree <- boost_learn(tree, train_set, dv) |>
-  boost_predict(test_set) |> rmse_oos(actuals = train_set[, dv])
+  boost_predict(train_set) |> rmse_oos(actuals = train_set[, dv])
 
 boost_is_rmse_ols
 boost_is_rmse_tree
@@ -161,11 +161,11 @@ boost_oos_rmse_tree
 # is
 db_is_rmse_ols <- double_bagged_learn(estimated_model = ols , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
   bagged_predict(new_data = train_set) |>
-  rmse_oos(actuals = test_set[, dv])
+  rmse_oos(actuals = train_set[, dv])
 
 db_is_rmse_tree <- double_bagged_learn(estimated_model = tree , dataset = train_set, b = 100, p =  xv_list$conditional, outcome = dv, seed = 2012) |>
   bagged_predict(new_data = train_set) |>
-  rmse_oos(actuals = test_set[, dv])
+  rmse_oos(actuals = train_set[, dv])
 
 db_is_rmse_ols
 db_is_rmse_tree
