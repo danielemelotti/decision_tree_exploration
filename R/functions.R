@@ -73,7 +73,7 @@ boost_predict <- function(boosted_learning, new_data) {
   apply(pred_frame, FUN = \(preds) rate * sum(preds), MARGIN=1)
 }
 
-# Random Forest
+# Double Bagging 
 double_bagged_learn <- function(estimated_model, dataset, b=100, p, m, outcome) {
   m <- length(p)/3 # default m
   lapply(1:b, \(i) { # from bootstrap 1 to b
@@ -96,6 +96,7 @@ double_bagged_learn <- function(estimated_model, dataset, b=100, p, m, outcome) 
   })
 }
 
-# TEST
-test<-xv_list$conditional[sample(length(xv_list$conditional), size = round(length(xv_list$conditional)/3, 0), replace = FALSE)]
-#
+double_bagged_predict <- function(bagged_models, new_data) {
+  predictions <- lapply(bagged_models, \(m) predict(m, new_data))
+  as.data.frame(predictions) |> apply(FUN=mean, MARGIN=1)
+}
