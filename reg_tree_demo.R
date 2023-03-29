@@ -5,10 +5,12 @@
 install.packages("rpart")
 install.packages("rpart.plot")
 install.packages("rattle")
+install.packages("randomForest")
 require(rpart)
 require(rpart.plot)
 require(rattle)
 require(dplyr)
+require(randomForest)
 
 # For the purpose of this exercise, we'll be using a dataset regarding housing prices in Miami.
 # The dataset can be downloaded from: https://www.kaggle.com/datasets/deepcontractor/miami-housing-dataset
@@ -125,13 +127,15 @@ plotcp(prune_tree)
 # https://stackoverflow.com/questions/21698540/whats-the-meaning-of-plotcp-result-in-rpart for reference.
 
 ## Producing predictions
+# Creating a list of models
+models <- list(ols, tree, prune_tree)
+
 # Predicting the outcome variable on the test set for the ols, tree and pruned tree models
 purchase_predicted_ols <- predict(ols, test_set)
 purchase_predicted_tree <- predict(tree, test_set)
 purchase_predicted_prune <- predict(prune_tree, test_set)
 
 ## Reporting prediction accuracy using Root Mean Squared Error (RMSE)
-
 # Creating a function to calculate the RMSE out of sample
 rmse_is <- function(estimated_model) {
   sqrt(mean(residuals(estimated_model)^2))
@@ -325,3 +329,12 @@ colnames(bag_boost_comparison) <- c("rmse_ols", "rmse_prune")
 rownames(bag_boost_comparison) <- c("bag", "boost")
 
 bag_boost_comparison
+
+## Implementing a random forest algorithm
+# Building the model on the train set
+rf_model <- randomForest(model_formula, data = train_set, importance = TRUE)
+
+# Validating the model
+test_pred <- predict(rf_model_2, newdata = test_set, type = "class")
+
+# Calculating the RMSE
