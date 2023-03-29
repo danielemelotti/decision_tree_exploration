@@ -74,36 +74,23 @@ boost_predict <- function(boosted_learning, new_data) {
 }
 
 # Random Forest
-bagged_learn_forest <- function(estimated_model, dataset, b=100, p, m = length(p)/3, outcome) {
-  lapply(1:b, \(i) {
-    data_i <- dataset[sample(nrow(dataset), replace = TRUE),]
-      lapply(1:length(p$conditional), \(i) {
-        pred_i <- p[sample(length(p$conditional), size = round(m, 0), replace = FALSE)]
-        random_preds <- paste(outcome, "~", pred_i[1])
-        for(i in 1:(length(test) - 1)){
-          random_preds <- paste(random_preds,"+", test[i + 1])
+bagged_learn_forest <- function(estimated_model, dataset, b=100, p, m, outcome) {
+  m <- length(p)/3 # default m
+  lapply(1:b, \(i) { # from bootstrap 1 to b
+    data_i <- dataset[sample(nrow(dataset), replace = TRUE),] # shuffle rows with replacement
+      lapply(1:length(p), \(i) { # from variable 1 to p
+        pred_i <- p[sample(length(p), size = round(m, 0), replace = FALSE)] # randomly extract m variables without replacement
+        random_preds <- paste(outcome, "~", pred_i[1]) # start creating new model_formula according to extracted predictors
+        for(i in 1:(length(random_preds) - 1)){ # repeat m times
+          random_preds <- paste(random_preds,"+", test[i + 1]) # add a predictor to formula
         }
-        predictors <- as.formula(random_preds)
+        new_pred_formula <- as.formula(random_preds)
       })
-    update(estimated_model, data=data_i,) ###
+    # update(estimated_model, data=data_i,)
+      lm(new_pred_formula, data = data_i) # run models
   })
 }
 
 # TEST
 test<-xv_list$conditional[sample(length(xv_list$conditional), size = round(length(xv_list$conditional)/3, 0), replace = FALSE)]
-# test contains sampled predictors. How to put them inside model formula?
-
-random_preds <- paste(dv, "~", test[1])
-
-
-random_preds
-
-paste(dv, "~", test[1], "+", test[2])
-sas<- as.formula(sas)
-class(sas)
 #
-
-bagged_predict_forest <- function(bagged_models, new_data) {
-  predictions <- lapply(bagged_models, \(m) predict(m, new_data))
-  as.data.frame(predictions) |> apply(FUN=mean, MARGIN=1)
-}
