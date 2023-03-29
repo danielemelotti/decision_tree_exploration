@@ -10,36 +10,30 @@ require(rpart.plot)
 require(rattle)
 require(dplyr)
 
-# For the purpose of this exercise, we'll be using a dataset containing cars data from 2019.
-# The dataset can be downloaded from: https://www.kaggle.com/datasets/lepchenkov/usedcarscatalog
-# The dataset includes a total of 30 variables, but we will focus only on 7 of them.
+# For the purpose of this exercise, we'll be using a dataset regarding housing prices in Miami.
+# The dataset can be downloaded from: https://www.kaggle.com/datasets/deepcontractor/miami-housing-dataset
+# The dataset includes a total of 17 variables.
 
 ## Loading specific data and model_formula
-DL_data <- read.csv("cars.csv")
+DL_data <- read.csv("miami-housing.csv")
 str(DL_data)
 
-# Filtering for the variables of interest, creating a new variable indicating the cars age
+# Filtering for the variables of interest
 fulldata <- DL_data %>%
-  select("odometer_value", "year_produced", "engine_capacity", "has_warranty",
-         "price_usd", "up_counter", "duration_listed") %>%
-  mutate(car_years = 2019 - year_produced) %>%
-  select(-"year_produced")
+  select(-c("LATITUDE","LONGITUDE", "PARCELNO", "month_sold"))
 
 str(fulldata)
 
-dv <- "price_usd" # outcome variable
-model_formula <- price_usd ~ odometer_value + engine_capacity + factor(has_warranty) +
-  up_counter + duration_listed + car_years
-
-head(fulldata)
+dv <- "SALE_PRC" # outcome variable
+model_formula <- SALE_PRC ~ LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + RAIL_DIST + OCEAN_DIST +
+  WATER_DIST + CNTR_DIST + SUBCNTR_DI + HWY_DIST + age + avno60plus + structure_quality
 
 table(is.na(fulldata))
 
-# There are some missing values. Let's omit them.
-fulldata <- na.omit(fulldata)
+# There are no missing values
 
-plot(fulldata[, c(dv, "odometer_value", "engine_capacity", "has_warranty",
-                      "up_counter", "duration_listed", "car_years")], 
+# Plotting the data to inspect relationships
+plot(fulldata[, c(dv, "TOT_LVG_AREA", "RAIL_DIST", "CNTR_DIST", "age", "structure_quality")], 
      col=rgb(0.7, 0.7, 0.7, 0.3)) # inspecting the relationships between the data
 
 ## Split-sample cross validation 
@@ -59,10 +53,10 @@ summary(ols)
 tree <- rpart(model_formula, data = train_set)
 rpart.plot(tree, type = 2)
 
-# DESCRIPTION: The top value is the average car price for the cars included within a 
+# DESCRIPTION: The top value is the average house price for the houses included within a 
 # certain node. For example, the root node shows that in the whole train data, the average
-# cost for a used car is 6,640; the root's left child node instead presents an average cost
-# of 3,451 (for cars that are older than 13 years). The values won't hold if the seed is changed.
+# cost for a house is 401,000; the root's left child node instead presents an average cost
+# of 355,000 (for houses that have a floor area < 3460 sq feet). The values will vary if the seed is changed.
 # The lower value represents the percentage of the whole data which is included at that node 
 # (and therefore satisfies the decision criteria at every split up to that point).
 
@@ -104,12 +98,12 @@ printcp(tree)
 c_par <- tree$cptable[which.min(tree$cptable[, "xerror"]), "CP"]
 c_par
 
+# We see that the lowest xerror is actually related to the very last split. Hence, there would be no real need 
+# to prune the tree.
+
 ## Pruning the tree according to c_par
 prune_tree <- prune(tree, cp = c_par)
 rpart.plot(prune_tree)
-
-# As we can see, a split has been removed. We can use printcp() to verify the it:
-printcp(prune_tree)
 
 # Plotting the tree with fancyRpartPlot
 fancyRpartPlot(prune_tree)
@@ -141,6 +135,7 @@ purchase_predicted_prune <- predict(prune_tree, test_set)
 rmse_is_ols <- round(sqrt(mean(residuals(ols)^2)), 4)
 rmse_is_tree <- round(sqrt(mean(residuals(tree)^2)), 4)
 rmse_is_prune <- round(sqrt(mean(residuals(prune_tree)^2)), 4)
+
 rmse_is_ols
 rmse_is_tree
 rmse_is_prune
@@ -154,6 +149,7 @@ rmse_oos <- function(actuals, preds) {
 rmse_oos_ols <- rmse_oos(purchase_predicted_ols, test_set[, dv])
 rmse_oos_tree <- rmse_oos(purchase_predicted_tree, test_set[, dv])
 rmse_oos_prune <- rmse_oos(purchase_predicted_prune, test_set[, dv])
+
 rmse_oos_ols
 rmse_oos_tree
 rmse_oos_prune
@@ -238,7 +234,7 @@ k_fold_rmse_ols <- k_fold_rmse(ols, fulldata, dv, k = 50)
 k_fold_rmse_tree <- k_fold_rmse(tree, fulldata, dv, k = 50)
 k_fold_rmse_prune <- k_fold_rmse(prune_tree, fulldata, dv, k = 50)
 
-k_fold_rmse_ols
+k_fold_rmse_ols # still oos < is ...
 k_fold_rmse_tree
 k_fold_rmse_prune
 
