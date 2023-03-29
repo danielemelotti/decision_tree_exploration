@@ -6,13 +6,11 @@
 
 #install.packages("rpart")
 #install.packages("rpart.plot")
-#install.packages("rattle")
 #install.packages("randomForest")
 #install.packages("ranger")
 #install.packages("insight")
 require(rpart)
 require(rpart.plot)
-require(rattle)
 require(dplyr)
 require(randomForest)
 require(ranger)
