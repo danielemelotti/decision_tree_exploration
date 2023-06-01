@@ -91,13 +91,10 @@ boot_rmse_is_ols <- mean(boot_rmse[1, ])
 boot_rmse_oos_ols <- mean(boot_rmse[2, ])
 boot_rmse_is_tree <- mean(boot_rmse[3, ])
 boot_rmse_oos_tree <- mean(boot_rmse[4, ])
-boot_rmse_is_prune <- mean(boot_rmse[5, ])
-boot_rmse_oos_prune <- mean(boot_rmse[6, ])
 
-comparison <- matrix(c(boot_rmse_is_ols, boot_rmse_oos_ols, boot_rmse_is_tree, boot_rmse_oos_tree,
-                       boot_rmse_is_prune, boot_rmse_oos_prune), ncol = 3, byrow = FALSE)
+comparison <- matrix(c(boot_rmse_is_ols, boot_rmse_oos_ols, boot_rmse_is_tree, boot_rmse_oos_tree), ncol = 2, byrow = FALSE)
 
-colnames(comparison) <- c("rmse_ols", "rmse_tree", "rmse_prune")
+colnames(comparison) <- c("rmse_ols", "rmse_tree")
 rownames(comparison) <- c("is", "oos")
 
 comparison
@@ -134,8 +131,8 @@ bag_oos_rmse_tree <- bagged_learn(estimated_model = tree, dataset = train_set, s
   bagged_predict(new_data = test_set) |>
   rmse_oos(actuals = test_set[, dv])
 
-bag_oos_rmse_ols
-bag_oos_rmse_tree
+bag_oos_rmse_ols  # 183723.8
+bag_oos_rmse_tree # 156105.3
 
 ## Implementing Boosting
 # Comparing the is and oos RMSEs between ols and tree boosted models
@@ -146,8 +143,12 @@ boost_is_rmse_ols <- boost_learn(ols, train_set, dv) |>
 boost_is_rmse_tree <- boost_learn(tree, train_set, dv) |>
   boost_predict(train_set) |> rmse_oos(actuals = train_set[, dv])
 
-boost_is_rmse_ols
-boost_is_rmse_tree
+bl <- boost_learn(estimated_model = ols, dataset = train_set, outcome = dv)
+
+bp <- boost_predict(bl, train_set) 
+
+boost_is_rmse_ols  # 171842.2
+boost_is_rmse_tree # 89437.43
 
 # oos
 boost_oos_rmse_ols <- boost_learn(ols, train_set, dv) |>
@@ -156,8 +157,8 @@ boost_oos_rmse_ols <- boost_learn(ols, train_set, dv) |>
 boost_oos_rmse_tree <- boost_learn(tree, train_set, dv) |>
   boost_predict(test_set) |> rmse_oos(actuals = test_set[, dv])
 
-boost_oos_rmse_ols
-boost_oos_rmse_tree
+boost_oos_rmse_ols # 183742.1
+boost_oos_rmse_tree # 112770
 
 ## Simple Forest
 # is
@@ -185,19 +186,35 @@ sf_oos_rmse_ols
 sf_oos_rmse_tree
 
 # Complete error comparison
-error_comparison_1 <- matrix(c(rmse_is_ols, rmse_oos_ols, rmse_is_tree, rmse_oos_tree, NA,
-                             k_fold_rmse_ols, NA, k_fold_rmse_tree, bag_is_rmse_ols,
-                             bag_oos_rmse_ols, bag_is_rmse_tree, bag_oos_rmse_tree, boost_is_rmse_ols,
-                             boost_oos_rmse_ols, boost_is_rmse_tree, boost_oos_rmse_tree, sf_is_rmse_ols,
-                             sf_oos_rmse_ols, sf_is_rmse_tree, sf_oos_rmse_tree), ncol = 2, byrow = 
-                             TRUE)
+error_comparison_complete <- matrix(c(rmse_is_ols, rmse_oos_ols,
+                               rmse_is_tree, rmse_oos_tree,
+                               NA, k_fold_rmse_ols,
+                               NA, k_fold_rmse_tree,
+                               bag_is_rmse_ols, bag_oos_rmse_ols,
+                               bag_is_rmse_tree, bag_oos_rmse_tree,
+                               boost_is_rmse_ols, boost_oos_rmse_ols,
+                               boost_is_rmse_tree, boost_oos_rmse_tree),
+                             ncol = 2, byrow = TRUE)
 
-colnames(error_comparison) <- c("is", "oos")
-rownames(error_comparison) <- c("split-sample_ols", "split-sample_tree", "k-fold_ols", "f-fold_tree",
-                                    "bagging_ols", "bagging_tree", "boosting_ols", "boosting_tree", 
-                                    "simple-forest_ols", "simple-forest_tree")
+colnames(error_comparison_complete) <- c("is", "oos")
+rownames(error_comparison_complete) <- c("split-sample_ols","split-sample_tree",
+                                "k-fold_ols", "f-fold_tree",
+                                "bagging_ols", "bagging_tree",
+                                "boosting_ols", "boosting_tree")
 
-error_comparison
+error_comparison_complete
+
+# Results:
+
+#                      is      oos
+# split-sample_ols  171842.19 183741.5
+# split-sample_tree 164520.94 176535.1
+# k-fold_ols               NA 175162.3
+# f-fold_tree              NA 173299.5
+# bagging_ols       171843.42 183723.8
+# bagging_tree      144787.46 156105.3
+# boosting_ols      171842.19 183742.1
+# boosting_tree      89437.43 112770.0
 
 ## Implementing k_fold with caret package
 # Defining training control as cross-validation with k = 100
