@@ -119,8 +119,8 @@ bag_is_rmse_tree <- bagged_learn(estimated_model = tree, dataset = train_set, se
   bagged_predict(new_data = train_set) |>
   rmse_oos(actuals = train_set[, dv])
 
-bag_is_rmse_ols
-bag_is_rmse_tree
+bag_is_rmse_ols # 171843.4
+bag_is_rmse_tree # 144787.5
 
 # oos
 bag_oos_rmse_ols <- bagged_learn(estimated_model = ols, dataset = train_set, seed = 123) |>
